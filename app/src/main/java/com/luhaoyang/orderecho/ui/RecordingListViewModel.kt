@@ -51,17 +51,24 @@ class RecordingListViewModel(
 
     fun playbackState(): PlaybackState = playbackController.state()
 
+    fun refreshPlayback(): RecordingListState {
+        playbackController.updateProgress()
+        return displayedState()
+    }
+
     fun release() = playbackController.release()
 
     private fun displayedState(): RecordingListState {
+        if (allRecordings.isEmpty()) return RecordingListState.Empty
         val filtered = allRecordings.filter { it.phoneNumber.orEmpty().contains(query) }
-        return if (filtered.isEmpty()) RecordingListState.Empty else RecordingListState.Content(grouper.group(filtered))
+        return if (filtered.isEmpty()) RecordingListState.NoMatches else RecordingListState.Content(grouper.group(filtered))
     }
 }
 
 sealed interface RecordingListState {
     data object MissingDirectory : RecordingListState
     data object Empty : RecordingListState
+    data object NoMatches : RecordingListState
     data object Error : RecordingListState
     data class Content(val groups: List<com.luhaoyang.orderecho.data.MonthGroup>) : RecordingListState
 }

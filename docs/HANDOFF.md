@@ -17,6 +17,13 @@ Implement the first-release offline Android recording manager task by task.
 - `:app:testDebugUnitTest :app:assembleDebug` passed on 2026-07-26.
 - The targeted connected test could not run because ADB reported `No connected devices!`; run it on the BAC-AL00 before release.
 
+## Task 5 review fixes
+
+- Returning from the app-details settings page now rechecks storage permission and refreshes the recording list. The retry action requests permission again when it remains denied.
+- Playback publishes the current player position every 500 ms while playing, and the recording row refreshes its progress and elapsed-time display.
+- The permission test revokes both storage permissions before launch and uses UiAutomator to deny the Android permission prompt before asserting the recovery UI.
+- A search with no matching phone number now has a distinct Chinese message instead of looking like an empty recording directory.
+
 ## Completed: Task 4 single-file AMR playback
 
 - Added a platform-independent playback state reducer with Idle, Playing, Paused, and Chinese error states.

@@ -5,6 +5,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +14,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -30,6 +33,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var content: FrameLayout
     private lateinit var viewModel: RecordingListViewModel
     private lateinit var adapter: RecordingListAdapter
+    private val progressHandler = Handler(Looper.getMainLooper())
+    private val progressRefresh = object : Runnable {
+        override fun run() {
+            if (!::viewModel.isInitialized) return
+            render(viewModel.refreshPlayback())
+            if (viewModel.playbackState() is com.luhaoyang.orderecho.playback.PlaybackState.Playing) {
+                progressHandler.postDelayed(this, PROGRESS_REFRESH_MILLIS)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +56,15 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == STORAGE_PERMISSION_REQUEST && hasStoragePermission()) showRecordingList() else showPermissionRequired()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (hasStoragePermission()) {
+            if (::viewModel.isInitialized) render(viewModel.refresh()) else showRecordingList()
+        }
+    }
+
     override fun onDestroy() {
+        progressHandler.removeCallbacks(progressRefresh)
         if (::viewModel.isInitialized) viewModel.release()
         super.onDestroy()
     }
@@ -77,7 +98,10 @@ class MainActivity : AppCompatActivity() {
         content.removeAllViews()
         LayoutInflater.from(this).inflate(R.layout.fragment_recording_list, content, true)
         adapter = RecordingListAdapter(
-            onPlay = { recording -> render(viewModel.play(recording)) },
+            onPlay = { recording ->
+                render(viewModel.play(recording))
+                scheduleProgressRefresh()
+            },
             onDelete = { recording -> render(viewModel.delete(recording)) }
         )
         content.findViewById<RecyclerView>(R.id.recording_list).apply {
@@ -97,8 +121,11 @@ class MainActivity : AppCompatActivity() {
             is RecordingListState.Content -> {
                 content.findViewById<RecyclerView>(R.id.recording_list).visibility = View.VISIBLE
                 adapter.submit(state.groups, viewModel.playbackState())
+                val playbackError = viewModel.playbackState() as? com.luhaoyang.orderecho.playback.PlaybackState.Error
+                if (playbackError != null) Toast.makeText(this, playbackError.message, Toast.LENGTH_SHORT).show()
             }
             RecordingListState.Empty -> showMessage(R.string.recordings_empty)
+            RecordingListState.NoMatches -> showMessage(R.string.recordings_no_matches)
             RecordingListState.MissingDirectory -> showMessage(R.string.recordings_missing_directory)
             RecordingListState.Error -> showMessage(R.string.recordings_load_error)
         }
@@ -108,11 +135,21 @@ class MainActivity : AppCompatActivity() {
         content.removeAllViews()
         LayoutInflater.from(this).inflate(R.layout.view_empty_recordings, content, true)
         content.findViewById<TextView>(R.id.empty_message).setText(messageRes)
-        content.findViewById<Button>(R.id.retry).setOnClickListener { showRecordingList() }
+        content.findViewById<Button>(R.id.retry).setOnClickListener {
+            if (hasStoragePermission()) showRecordingList() else requestStoragePermission()
+        }
+    }
+
+    private fun scheduleProgressRefresh() {
+        progressHandler.removeCallbacks(progressRefresh)
+        if (viewModel.playbackState() is com.luhaoyang.orderecho.playback.PlaybackState.Playing) {
+            progressHandler.postDelayed(progressRefresh, PROGRESS_REFRESH_MILLIS)
+        }
     }
 
     private companion object {
         const val STORAGE_PERMISSION_REQUEST = 41
+        const val PROGRESS_REFRESH_MILLIS = 500L
         val STORAGE_PERMISSIONS = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 }

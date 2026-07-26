@@ -64,6 +64,17 @@ class PlaybackController(
         }
     }
 
+    fun updateProgress() {
+        val activePlayer = player ?: return
+        if (playbackState !is PlaybackState.Playing) return
+        try {
+            publish(PlaybackEvent.Progress(activePlayer.currentPosition))
+        } catch (_: IllegalStateException) {
+            releasePlayer()
+            publish(PlaybackEvent.Fail(PLAYBACK_ERROR))
+        }
+    }
+
     fun stop() {
         releasePlayer()
         publish(PlaybackEvent.Stop)

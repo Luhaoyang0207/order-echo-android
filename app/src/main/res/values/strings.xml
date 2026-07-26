@@ -6,6 +6,7 @@
     <string name="open_system_settings">打开系统设置</string>
     <string name="recordings_missing_directory">未找到通话录音文件夹</string>
     <string name="recordings_empty">暂无通话录音</string>
+    <string name="recordings_no_matches">未找到匹配的电话号码</string>
     <string name="recordings_load_error">读取录音失败，请稍后重试</string>
     <string name="unknown_number">未知号码</string>
     <string name="search_number_hint">搜索电话号码</string>
