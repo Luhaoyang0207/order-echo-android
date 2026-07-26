@@ -10,6 +10,7 @@ Implement the first-release offline Android recording manager task by task.
 - Added in-memory `RecordingGrouper` month/date sections. Both month and date are sorted newest first; the underlying Huawei recording files remain untouched.
 - Added `RetentionCleaner`, which applies the existing natural-day retention rule and calls the repository for every deletion. It counts failures and continues if a deletion fails or throws.
 - Added a unique once-daily WorkManager job plus a boot-completed receiver that only restores that schedule. The worker uses the fixed `Sounds/Callrecord` directory and no network capability.
+- App startup now requests the same unique daily cleanup schedule, so a fresh install does not need to reboot before WorkManager work is established.
 - Added unit coverage for the settings default, persistence, invalid selection rejection, and descending virtual grouping.
 
 ## Task 3 verification
