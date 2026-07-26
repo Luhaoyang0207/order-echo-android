@@ -16,6 +16,7 @@ import java.util.Locale
 
 class RecordingListAdapter(
     private val onPlay: (RecordingFile) -> Unit,
+    private val onStop: () -> Unit,
     private val onDelete: (RecordingFile) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var items: List<Row> = emptyList()
@@ -66,12 +67,16 @@ class RecordingListAdapter(
         holder.metadata.text = "${recording.recordedAt.format(TIME_FORMAT)} · ${formatSize(recording.sizeBytes)}"
         val active = playbackState.takeIf { it.fileOrNull() == recording.file }
         val position = active?.positionMillis() ?: 0
-        val duration = active?.durationMillis() ?: 0
+        val duration = active?.durationMillis()?.takeIf { it > 0 }
+            ?: recording.durationMillis
+            ?: 0
         holder.progress.max = duration.coerceAtLeast(1)
         holder.progress.progress = position.coerceAtMost(holder.progress.max)
         holder.time.text = "${formatDuration(position)} / ${if (duration > 0) formatDuration(duration) else context.getString(R.string.duration_unknown)}"
         holder.playPause.text = if (active is PlaybackState.Playing) context.getString(R.string.pause) else context.getString(R.string.play)
         holder.playPause.setOnClickListener { onPlay(recording) }
+        holder.stop.isEnabled = active != null
+        holder.stop.setOnClickListener { onStop() }
         holder.delete.setOnClickListener { onDelete(recording) }
     }
 
@@ -108,6 +113,7 @@ class RecordingListAdapter(
         val progress: ProgressBar = view.findViewById(R.id.playback_progress)
         val time: TextView = view.findViewById(R.id.playback_time)
         val playPause: Button = view.findViewById(R.id.play_pause)
+        val stop: Button = view.findViewById(R.id.stop_playback)
         val delete: Button = view.findViewById(R.id.delete_recording)
     }
 

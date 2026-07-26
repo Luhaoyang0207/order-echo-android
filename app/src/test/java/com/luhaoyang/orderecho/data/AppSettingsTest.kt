@@ -28,7 +28,22 @@ class AppSettingsTest {
         AppSettings(TestContext()).setRetentionDays(14)
     }
 
-    private class TestContext : ContextWrapper(null) {
+    @Test
+    fun latestCleanupResultPersistsAcrossSettingsInstances() {
+        val context = TestContext()
+        AppSettings(context).setLastCleanupResult(
+            completedAtMillis = 1_234L,
+            deletedCount = 2,
+            failedCount = 1
+        )
+
+        assertEquals(
+            LastCleanupResult(1_234L, deletedCount = 2, failedCount = 1),
+            AppSettings(context).lastCleanupResult()
+        )
+    }
+
+    class TestContext : ContextWrapper(null) {
         private val preferences = InMemoryPreferences()
 
         override fun getSharedPreferences(name: String, mode: Int): SharedPreferences = preferences

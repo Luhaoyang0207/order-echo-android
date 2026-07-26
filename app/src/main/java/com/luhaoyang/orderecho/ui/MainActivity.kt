@@ -23,11 +23,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.luhaoyang.orderecho.R
 import com.luhaoyang.orderecho.cleanup.CleanupStartup
+import com.luhaoyang.orderecho.cleanup.CleanupResult
 import com.luhaoyang.orderecho.cleanup.RetentionCleaner
 import com.luhaoyang.orderecho.data.AppSettings
 import com.luhaoyang.orderecho.data.RecordingGrouper
 import com.luhaoyang.orderecho.data.RecordingRepository
 import com.luhaoyang.orderecho.playback.PlaybackController
+import com.luhaoyang.orderecho.playback.RecordingDurationReader
 import java.io.File
 
 class MainActivity : AppCompatActivity(), SettingsHost {
@@ -96,13 +98,17 @@ class MainActivity : AppCompatActivity(), SettingsHost {
         }
         if (!::viewModel.isInitialized) {
             CleanupStartup().initialize(applicationContext)
-            val repository = RecordingRepository(File("/storage/emulated/0/Sounds/Callrecord/"))
+            val repository = RecordingRepository(
+                baseDirectory = File("/storage/emulated/0/Sounds/Callrecord/"),
+                durationReader = RecordingDurationReader()::read
+            )
             val settings = AppSettings(applicationContext)
+            val retentionCleaner = RetentionCleaner(repository, settings)
             viewModel = RecordingListViewModel(
                 repository,
                 RecordingGrouper(),
                 PlaybackController(repository),
-                RetentionCleaner(repository, settings)
+                retentionCleaner::clean
             )
         }
         content.removeAllViews()
@@ -111,6 +117,10 @@ class MainActivity : AppCompatActivity(), SettingsHost {
             onPlay = { recording ->
                 render(viewModel.play(recording))
                 scheduleProgressRefresh()
+            },
+            onStop = {
+                progressHandler.removeCallbacks(progressRefresh)
+                render(viewModel.stopPlayback())
             },
             onDelete = ::confirmDelete
         )
@@ -123,7 +133,11 @@ class MainActivity : AppCompatActivity(), SettingsHost {
             render(viewModel.setQuery(view.text.toString()))
             true
         }
-        render(viewModel.runCleanup())
+        content.findViewById<Button>(R.id.clear_search).setOnClickListener {
+            content.findViewById<EditText>(R.id.search_number).text.clear()
+            render(viewModel.clearQuery())
+        }
+        render(viewModel.runCleanup().listState)
     }
 
     private fun showSettings() {
@@ -147,20 +161,30 @@ class MainActivity : AppCompatActivity(), SettingsHost {
 
     override fun recordingStatistics(): RecordingStatistics = viewModel.recordingStatistics()
 
-    override fun runCleanupFromSettings(): Boolean = runCatching {
-        viewModel.runCleanup()
-    }.isSuccess
+    override fun runCleanupFromSettings(): CleanupResult? {
+        val run = viewModel.runCleanup()
+        return run.cleanupResult
+    }
 
     private fun render(state: RecordingListState) {
         when (state) {
             is RecordingListState.Content -> {
                 content.findViewById<RecyclerView>(R.id.recording_list).visibility = View.VISIBLE
+                content.findViewById<View>(R.id.no_matches).visibility = View.GONE
+                content.findViewById<TextView>(R.id.scan_warning).apply {
+                    visibility = if (state.scanFailedCount > 0) View.VISIBLE else View.GONE
+                    text = getString(R.string.recordings_scan_warning, state.scanFailedCount)
+                }
                 adapter.submit(state.groups, viewModel.playbackState())
                 val playbackError = viewModel.playbackState() as? com.luhaoyang.orderecho.playback.PlaybackState.Error
                 if (playbackError != null) Toast.makeText(this, playbackError.message, Toast.LENGTH_SHORT).show()
             }
             RecordingListState.Empty -> showMessage(R.string.recordings_empty)
-            RecordingListState.NoMatches -> showMessage(R.string.recordings_no_matches)
+            RecordingListState.NoMatches -> {
+                content.findViewById<RecyclerView>(R.id.recording_list).visibility = View.GONE
+                content.findViewById<TextView>(R.id.scan_warning).visibility = View.GONE
+                content.findViewById<View>(R.id.no_matches).visibility = View.VISIBLE
+            }
             RecordingListState.MissingDirectory -> showMessage(R.string.recordings_missing_directory)
             RecordingListState.Error -> showMessage(R.string.recordings_load_error)
         }

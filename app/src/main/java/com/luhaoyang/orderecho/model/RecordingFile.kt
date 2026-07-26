@@ -7,5 +7,6 @@ data class RecordingFile(
     val file: File,
     val phoneNumber: String?,
     val recordedAt: LocalDateTime,
-    val sizeBytes: Long
+    val sizeBytes: Long,
+    val durationMillis: Int? = null
 )

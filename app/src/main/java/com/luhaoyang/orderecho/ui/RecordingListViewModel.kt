@@ -1,25 +1,28 @@
 package com.luhaoyang.orderecho.ui
 
-import com.luhaoyang.orderecho.cleanup.RetentionCleaner
+import com.luhaoyang.orderecho.cleanup.CleanupResult
 import com.luhaoyang.orderecho.data.RecordingGrouper
 import com.luhaoyang.orderecho.data.RecordingRepository
 import com.luhaoyang.orderecho.model.RecordingFile
-import com.luhaoyang.orderecho.playback.PlaybackController
+import com.luhaoyang.orderecho.playback.PlaybackCommands
 import com.luhaoyang.orderecho.playback.PlaybackState
 
 class RecordingListViewModel(
     private val repository: RecordingRepository,
     private val grouper: RecordingGrouper,
-    private val playbackController: PlaybackController,
-    private val retentionCleaner: RetentionCleaner
+    private val playbackController: PlaybackCommands,
+    private val cleanup: () -> CleanupResult
 ) {
     private var allRecordings: List<RecordingFile> = emptyList()
     private var query: String = ""
+    private var scanFailedCount: Int = 0
 
     fun refresh(): RecordingListState {
         if (!repository.baseDirectory.isDirectory) return RecordingListState.MissingDirectory
         return runCatching {
-            allRecordings = repository.list()
+            val scan = repository.scan()
+            allRecordings = scan.recordings
+            scanFailedCount = scan.failedCount
             displayedState()
         }.getOrElse { RecordingListState.Error }
     }
@@ -29,23 +32,38 @@ class RecordingListViewModel(
         return displayedState()
     }
 
+    fun clearQuery(): RecordingListState {
+        query = ""
+        return displayedState()
+    }
+
     fun play(recording: RecordingFile): RecordingListState {
         val playback = playbackController.state()
-        if (playback is PlaybackState.Playing && playback.file == recording.file) {
-            playbackController.pause()
-        } else {
-            playbackController.play(recording)
+        when {
+            playback is PlaybackState.Playing && playback.file == recording.file ->
+                playbackController.pause()
+            playback is PlaybackState.Paused && playback.file == recording.file ->
+                playbackController.resume()
+            else -> playbackController.play(recording)
         }
         return displayedState()
     }
 
-    fun delete(recording: RecordingFile): RecordingListState {
-        return if (repository.delete(recording)) refresh() else RecordingListState.Error
+    fun stopPlayback(): RecordingListState {
+        playbackController.stop()
+        return displayedState()
     }
 
-    fun runCleanup(): RecordingListState {
-        retentionCleaner.clean()
-        return refresh()
+    fun delete(recording: RecordingFile): RecordingListState {
+        return runCatching {
+            if (repository.delete(recording)) refresh() else RecordingListState.Error
+        }.getOrElse { RecordingListState.Error }
+    }
+
+    fun runCleanup(): CleanupRunResult {
+        val cleanupResult = runCatching(cleanup).getOrNull()
+            ?: return CleanupRunResult(RecordingListState.Error, null)
+        return CleanupRunResult(refresh(), cleanupResult)
     }
 
     fun playbackState(): PlaybackState = playbackController.state()
@@ -67,11 +85,22 @@ class RecordingListViewModel(
     }.getOrDefault(RecordingStatistics(0, 0L, null))
 
     private fun displayedState(): RecordingListState {
-        if (allRecordings.isEmpty()) return RecordingListState.Empty
+        if (allRecordings.isEmpty()) {
+            return if (scanFailedCount > 0) RecordingListState.Error else RecordingListState.Empty
+        }
         val filtered = allRecordings.filter { it.phoneNumber.orEmpty().contains(query) }
-        return if (filtered.isEmpty()) RecordingListState.NoMatches else RecordingListState.Content(grouper.group(filtered))
+        return if (filtered.isEmpty()) {
+            RecordingListState.NoMatches
+        } else {
+            RecordingListState.Content(grouper.group(filtered), scanFailedCount)
+        }
     }
 }
+
+data class CleanupRunResult(
+    val listState: RecordingListState,
+    val cleanupResult: CleanupResult?
+)
 
 data class RecordingStatistics(
     val count: Int,
@@ -84,5 +113,8 @@ sealed interface RecordingListState {
     data object Empty : RecordingListState
     data object NoMatches : RecordingListState
     data object Error : RecordingListState
-    data class Content(val groups: List<com.luhaoyang.orderecho.data.MonthGroup>) : RecordingListState
+    data class Content(
+        val groups: List<com.luhaoyang.orderecho.data.MonthGroup>,
+        val scanFailedCount: Int = 0
+    ) : RecordingListState
 }

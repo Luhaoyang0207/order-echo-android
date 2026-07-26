@@ -6,6 +6,7 @@
     <TextView android:id="@+id/playback_time" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="14sp" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal">
         <Button android:id="@+id/play_pause" android:layout_width="0dp" android:layout_height="52dp" android:layout_weight="1" />
+        <Button android:id="@+id/stop_playback" android:layout_width="wrap_content" android:layout_height="52dp" android:layout_marginStart="8dp" android:text="@string/stop" />
         <Button android:id="@+id/delete_recording" android:layout_width="wrap_content" android:layout_height="52dp" android:layout_marginStart="8dp" android:text="@string/delete" />
     </LinearLayout>
 </LinearLayout>

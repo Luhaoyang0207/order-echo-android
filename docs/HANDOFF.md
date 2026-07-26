@@ -4,6 +4,27 @@
 
 Validate the completed first release on the Huawei BAC-AL00 physical device.
 
+## Completed: final-review Critical/Important fixes
+
+- Filename timestamps now use strict calendar/time resolution. Impossible values such as `20260230` fall back to the file's last-modified time instead of being silently normalized.
+- Recording scans isolate canonical-path and metadata failures per entry. Valid recordings remain available, skipped-entry counts are shown safely, and individual deletion converts file exceptions into a normal failure result.
+- Cleanup continues after failed deletions, persists deleted/failed counts with its completion time, shows partial failures in Settings, and returns the counts from background work.
+- A no-match search keeps the search field visible and offers `清除搜索`, restoring the unfiltered list without recreating the activity.
+- Tapping a paused recording resumes its retained position instead of restarting. Recording rows now include explicit Stop and a safely derived total duration, with `时长未知` as the fallback.
+
+## Final-review verification
+
+- `:app:testDebugUnitTest :app:assembleDebug` passed on 2026-07-26 using Android Studio's bundled JDK 17.
+- Targeted regression coverage passes for strict timestamp parsing, scan/delete exception isolation, cleanup continuation/result persistence, search clearing, pause/resume/stop behavior, and duration fallback.
+- `git diff --check` passed and the app manifest still contains no `android.permission.INTERNET`.
+- Physical-device playback and duration extraction remain part of BAC-AL00 acceptance because no Android device is connected to this environment.
+
+## Final-review files changed
+
+- Domain and cleanup: `RecordingRepository.kt`, `RecordingFile.kt`, `AppSettings.kt`, `RetentionCleaner.kt`, `CleanupWorker.kt`
+- Playback and UI: `PlaybackController.kt`, `PlaybackState.kt`, `RecordingDurationReader.kt`, `RecordingListViewModel.kt`, `RecordingListAdapter.kt`, `MainActivity.kt`, `SettingsFragment.kt`, recording layouts and Chinese strings
+- Regression tests: `RecordingRepositoryTest.kt`, `AppSettingsTest.kt`, `RetentionCleanerTest.kt`, `PlaybackStateTest.kt`, `RecordingListViewModelTest.kt`
+
 ## Completed: Task 6 settings, confirmations, and release checks
 
 - Added a bottom navigation bar between `录音` and `设置`.
@@ -140,4 +161,4 @@ None for design. The actual directory path and AMR playback must be revalidated 
 
 ## Next recommended task
 
-Execute Task 6 from `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`.
+Install the debug APK on the Huawei BAC-AL00 and complete the physical-device acceptance checklist above.

@@ -27,3 +27,11 @@ Recording discovery and deletion use the canonical Callrecord directory and acce
 ## 2026-07-26 — Use repository validation before AMR playback
 
 The playback controller asks `RecordingRepository` for currently validated recordings before opening a file with `MediaPlayer`. This keeps playback within the same canonical direct-child AMR boundary as discovery and deletion, while leaving the Huawei-generated files unchanged.
+
+## 2026-07-26 — Isolate recording-file failures and report partial cleanup
+
+Repository scans treat each direct child as an independent operation: canonical-path or metadata failure skips and counts only that entry. Deletion exceptions become failed results, cleanup continues with later eligible recordings, and the latest deleted/failed counts are persisted for Settings and background-worker reporting.
+
+## 2026-07-26 — Read duration without weakening the storage boundary
+
+The Android duration reader is injected into `RecordingRepository` and runs only after the repository validates a direct AMR child. Duration extraction failure leaves the recording visible with `时长未知`; it never authorizes another path or prevents other recordings from loading.

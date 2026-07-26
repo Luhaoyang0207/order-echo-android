@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.luhaoyang.orderecho.R
+import com.luhaoyang.orderecho.cleanup.CleanupResult
 import com.luhaoyang.orderecho.data.AppSettings
 import java.text.DateFormat
 import java.util.Date
@@ -44,8 +45,18 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             .setMessage(getString(R.string.cleanup_confirmation, days))
             .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.confirm) { _, _ ->
-                if ((activity as? SettingsHost)?.runCleanupFromSettings() == true) refreshStatus()
-                else Toast.makeText(requireContext(), R.string.cleanup_failed, Toast.LENGTH_SHORT).show()
+                val result = (activity as? SettingsHost)?.runCleanupFromSettings()
+                when {
+                    result == null ->
+                        Toast.makeText(requireContext(), R.string.cleanup_failed, Toast.LENGTH_SHORT).show()
+                    result.failedCount > 0 ->
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.cleanup_partial_failure, result.failedCount),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                }
+                refreshStatus()
             }
             .show()
     }
@@ -54,10 +65,21 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         val statistics = (activity as? SettingsHost)?.recordingStatistics() ?: RecordingStatistics(0, 0L, null)
         val oldest = statistics.oldestRecordedAt?.toLocalDate()?.let { getString(R.string.oldest_recording, it.year, it.monthValue, it.dayOfMonth) }
             ?: getString(R.string.no_recordings)
-        val lastCleanup = settings.lastCleanupAt().takeIf { it > 0L }?.let {
+        val cleanupResult = settings.lastCleanupResult()
+        val lastCleanup = cleanupResult.completedAtMillis.takeIf { it > 0L }?.let {
             DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.CHINA).format(Date(it))
         } ?: getString(R.string.never_cleaned)
-        status.text = getString(R.string.cleanup_status, statistics.count, formatSize(statistics.occupiedBytes), oldest, lastCleanup)
+        val lastResult = cleanupResult.completedAtMillis.takeIf { it > 0L }?.let {
+            getString(R.string.cleanup_result, cleanupResult.deletedCount, cleanupResult.failedCount)
+        } ?: getString(R.string.never_cleaned)
+        status.text = getString(
+            R.string.cleanup_status,
+            statistics.count,
+            formatSize(statistics.occupiedBytes),
+            oldest,
+            lastCleanup,
+            lastResult
+        )
     }
 
     private fun retentionDays(id: Int): Int = when (id) {
@@ -87,5 +109,5 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
 interface SettingsHost {
     fun recordingStatistics(): RecordingStatistics
-    fun runCleanupFromSettings(): Boolean
+    fun runCleanupFromSettings(): CleanupResult?
 }

@@ -18,7 +18,9 @@ class RetentionCleaner(
         val today = clock()
         val retentionDays = settings.retentionDays()
 
-        repository.list()
+        val scan = repository.scan()
+        failedCount += scan.failedCount
+        scan.recordings
             .filter { RetentionPolicy.isExpired(it.recordedAt.toLocalDate(), today, retentionDays) }
             .forEach { recording ->
                 if (runCatching { repository.delete(recording) }.getOrDefault(false)) {
@@ -28,7 +30,12 @@ class RetentionCleaner(
                 }
             }
 
-        settings.setLastCleanupAt(System.currentTimeMillis())
-        return CleanupResult(deletedCount, failedCount)
+        return CleanupResult(deletedCount, failedCount).also {
+            settings.setLastCleanupResult(
+                completedAtMillis = System.currentTimeMillis(),
+                deletedCount = it.deletedCount,
+                failedCount = it.failedCount
+            )
+        }
     }
 }

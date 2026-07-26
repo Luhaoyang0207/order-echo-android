@@ -16,4 +16,16 @@ class PlaybackProgressTest {
 
         assertEquals(PlaybackState.Playing(file, 300, 1_000), result)
     }
+
+    @Test
+    fun progressStillAdvancesWhenTotalDurationIsUnavailable() {
+        val file = File("recording.amr")
+
+        val result = reducePlaybackState(
+            PlaybackState.Playing(file, 50, 0),
+            PlaybackEvent.Progress(300)
+        )
+
+        assertEquals(PlaybackState.Playing(file, 300, 0), result)
+    }
 }

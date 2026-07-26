@@ -6,20 +6,41 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.ResolverStyle
 
-class RecordingRepository(val baseDirectory: File) {
-    fun list(): List<RecordingFile> {
-        return baseDirectory.listFiles()
-            ?.asSequence()
-            ?.filter(::isSafeRecordingFile)
-            ?.map(::toRecordingFile)
-            ?.toList()
-            ?: emptyList()
+data class RecordingScanResult(
+    val recordings: List<RecordingFile>,
+    val failedCount: Int
+)
+
+class RecordingRepository(
+    val baseDirectory: File,
+    private val deleteFile: (File) -> Boolean = { it.delete() },
+    private val durationReader: (File) -> Int? = { null },
+    private val childrenProvider: (File) -> Array<File>? = { it.listFiles() }
+) {
+    fun scan(): RecordingScanResult {
+        val recordings = mutableListOf<RecordingFile>()
+        var failedCount = 0
+
+        childrenProvider(baseDirectory)?.forEach { file ->
+            try {
+                if (isSafeRecordingFile(file)) recordings += toRecordingFile(file)
+            } catch (_: Exception) {
+                failedCount++
+            }
+        }
+
+        return RecordingScanResult(recordings, failedCount)
     }
 
+    fun list(): List<RecordingFile> = scan().recordings
+
     fun delete(recording: RecordingFile): Boolean {
-        val file = recording.file
-        return isSafeRecordingFile(file) && file.delete()
+        return runCatching {
+            val file = recording.file
+            isSafeRecordingFile(file) && deleteFile(file)
+        }.getOrDefault(false)
     }
 
     private fun isSafeRecordingFile(file: File): Boolean {
@@ -48,7 +69,8 @@ class RecordingRepository(val baseDirectory: File) {
             file = file,
             phoneNumber = match?.groupValues?.get(1)?.takeIf(String::isNotBlank),
             recordedAt = parsedDateTime ?: lastModifiedDateTime(file),
-            sizeBytes = file.length()
+            sizeBytes = file.length(),
+            durationMillis = runCatching { durationReader(file)?.takeIf { it > 0 } }.getOrNull()
         )
     }
 
@@ -59,6 +81,8 @@ class RecordingRepository(val baseDirectory: File) {
     private companion object {
         const val AMR_EXTENSION = ".amr"
         val HUAWEI_FILE_NAME = Regex("^(.+?)_(\\d{8})_(\\d{6})\\.amr$", RegexOption.IGNORE_CASE)
-        val HUAWEI_DATE_TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+        val HUAWEI_DATE_TIME_FORMAT: DateTimeFormatter = DateTimeFormatter
+            .ofPattern("uuuuMMdd_HHmmss")
+            .withResolverStyle(ResolverStyle.STRICT)
     }
 }

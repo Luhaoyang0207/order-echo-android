@@ -5,14 +5,24 @@ import com.luhaoyang.orderecho.data.RecordingRepository
 import com.luhaoyang.orderecho.model.RecordingFile
 import java.io.File
 
+interface PlaybackCommands {
+    fun play(recording: RecordingFile)
+    fun pause()
+    fun resume()
+    fun stop()
+    fun state(): PlaybackState
+    fun updateProgress()
+    fun release()
+}
+
 class PlaybackController(
     private val repository: RecordingRepository,
     private val playerFactory: () -> MediaPlayer = { MediaPlayer() }
-) {
+) : PlaybackCommands {
     private var player: MediaPlayer? = null
     private var playbackState: PlaybackState = PlaybackState.Idle
 
-    fun play(recording: RecordingFile) {
+    override fun play(recording: RecordingFile) {
         if (runCatching { validatedCanonicalFile(recording) }.getOrNull() == null) {
             releasePlayer()
             publish(PlaybackEvent.Fail(PLAYBACK_ERROR))
@@ -42,7 +52,12 @@ class PlaybackController(
             }
             newPlayer.prepare()
             newPlayer.start()
-            publish(PlaybackEvent.Start(playbackFile, newPlayer.duration))
+            val duration = runCatching { newPlayer.duration }
+                .getOrDefault(recording.durationMillis ?: 0)
+                .takeIf { it > 0 }
+                ?: recording.durationMillis
+                ?: 0
+            publish(PlaybackEvent.Start(playbackFile, duration))
         } catch (_: Exception) {
             if (player === newPlayer) {
                 releasePlayer()
@@ -51,7 +66,7 @@ class PlaybackController(
         }
     }
 
-    fun pause() {
+    override fun pause() {
         val activePlayer = player ?: return
         if (playbackState is PlaybackState.Playing) {
             try {
@@ -64,7 +79,20 @@ class PlaybackController(
         }
     }
 
-    fun updateProgress() {
+    override fun resume() {
+        val activePlayer = player ?: return
+        if (playbackState is PlaybackState.Paused) {
+            try {
+                activePlayer.start()
+                publish(PlaybackEvent.Resume)
+            } catch (_: IllegalStateException) {
+                releasePlayer()
+                publish(PlaybackEvent.Fail(PLAYBACK_ERROR))
+            }
+        }
+    }
+
+    override fun updateProgress() {
         val activePlayer = player ?: return
         if (playbackState !is PlaybackState.Playing) return
         try {
@@ -75,14 +103,14 @@ class PlaybackController(
         }
     }
 
-    fun stop() {
+    override fun stop() {
         releasePlayer()
         publish(PlaybackEvent.Stop)
     }
 
-    fun state(): PlaybackState = playbackState
+    override fun state(): PlaybackState = playbackState
 
-    fun release() {
+    override fun release() {
         stop()
     }
 

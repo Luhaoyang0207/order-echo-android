@@ -31,6 +31,30 @@ class PlaybackStateTest {
     }
 
     @Test
+    fun resumingPreservesThePausedPositionAndDuration() {
+        val file = File("recording.amr")
+
+        val result = reducePlaybackState(
+            PlaybackState.Paused(file, 300, 1_000),
+            PlaybackEvent.Resume
+        )
+
+        assertEquals(PlaybackState.Playing(file, 300, 1_000), result)
+    }
+
+    @Test
+    fun unknownPlatformDurationIsNormalizedSafely() {
+        val file = File("recording.amr")
+
+        val result = reducePlaybackState(
+            PlaybackState.Idle,
+            PlaybackEvent.Start(file, -1)
+        )
+
+        assertEquals(PlaybackState.Playing(file, 0, 0), result)
+    }
+
+    @Test
     fun stoppingReturnsToIdle() {
         val result = reducePlaybackState(
             PlaybackState.Paused(File("recording.amr"), 300, 1_000),
