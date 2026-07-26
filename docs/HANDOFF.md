@@ -2,7 +2,28 @@
 
 ## Current goal
 
-Implement the first-release offline Android recording manager task by task.
+Validate the completed first release on the Huawei BAC-AL00 physical device.
+
+## Completed: Task 6 settings, confirmations, and release checks
+
+- Added a bottom navigation bar between `录音` and `设置`.
+- Added a Settings screen with exactly five persisted retention choices (7, 30, 60, 90, and 180 days), current recording count, occupied space, oldest recording date or `无录音`, and last cleanup time or `尚未清理`.
+- Added a confirmation before manual cleanup that states the selected retention period and before individual deletion that states the phone number or `未知号码`.
+- Manual cleanup refreshes Settings status after success; cleanup and deletion failures use non-sensitive Chinese error UI.
+- Added the requested instrumentation boundary test: it verifies the five visible choices and that cleanup does not affect a file outside the configured Callrecord directory.
+- Updated README with JDK 17 build and debug-APK installation instructions.
+
+## Task 6 verification
+
+- `:app:testDebugUnitTest :app:assembleDebug` passed on 2026-07-26 using Android Studio's bundled JDK 17.
+- `:app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.luhaoyang.orderecho.cleanup.CleanupBoundaryTest` compiled and packaged the requested test, but could not execute because ADB reported `No connected devices!`.
+- `rg -n "android.permission.INTERNET" app/src/main/AndroidManifest.xml` returned no matches.
+
+## Remaining physical-device acceptance
+
+- Install the debug APK on the BAC-AL00 and test storage permission grant, refusal, and recovery.
+- Confirm real Huawei AMR discovery, virtual month/date grouping, two-file playback switching, every retention boundary, deletion confirmation/failure behavior, and cleanup after relaunch/reboot.
+- Confirm that non-AMR files and files outside Callrecord remain unchanged.
 
 ## Completed: Task 5 grouped recording list and permission flow
 

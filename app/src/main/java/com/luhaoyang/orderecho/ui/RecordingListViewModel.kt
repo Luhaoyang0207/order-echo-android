@@ -40,8 +40,7 @@ class RecordingListViewModel(
     }
 
     fun delete(recording: RecordingFile): RecordingListState {
-        repository.delete(recording)
-        return refresh()
+        return if (repository.delete(recording)) refresh() else RecordingListState.Error
     }
 
     fun runCleanup(): RecordingListState {
@@ -58,12 +57,27 @@ class RecordingListViewModel(
 
     fun release() = playbackController.release()
 
+    fun recordingStatistics(): RecordingStatistics = runCatching {
+        val recordings = repository.list()
+        RecordingStatistics(
+            count = recordings.size,
+            occupiedBytes = recordings.sumOf { it.sizeBytes },
+            oldestRecordedAt = recordings.minOfOrNull { it.recordedAt }
+        )
+    }.getOrDefault(RecordingStatistics(0, 0L, null))
+
     private fun displayedState(): RecordingListState {
         if (allRecordings.isEmpty()) return RecordingListState.Empty
         val filtered = allRecordings.filter { it.phoneNumber.orEmpty().contains(query) }
         return if (filtered.isEmpty()) RecordingListState.NoMatches else RecordingListState.Content(grouper.group(filtered))
     }
 }
+
+data class RecordingStatistics(
+    val count: Int,
+    val occupiedBytes: Long,
+    val oldestRecordedAt: java.time.LocalDateTime?
+)
 
 sealed interface RecordingListState {
     data object MissingDirectory : RecordingListState

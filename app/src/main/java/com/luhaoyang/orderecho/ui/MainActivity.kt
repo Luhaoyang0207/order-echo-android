@@ -16,6 +16,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -29,11 +30,12 @@ import com.luhaoyang.orderecho.data.RecordingRepository
 import com.luhaoyang.orderecho.playback.PlaybackController
 import java.io.File
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SettingsHost {
     private lateinit var content: FrameLayout
     private lateinit var viewModel: RecordingListViewModel
     private lateinit var adapter: RecordingListAdapter
     private val progressHandler = Handler(Looper.getMainLooper())
+    private var showingSettings = false
     private val progressRefresh = object : Runnable {
         override fun run() {
             if (!::viewModel.isInitialized) return
@@ -48,6 +50,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         content = findViewById(R.id.content)
+        findViewById<Button>(R.id.recordings_tab).setOnClickListener { showRecordingList() }
+        findViewById<Button>(R.id.settings_tab).setOnClickListener { showSettings() }
         if (hasStoragePermission()) showRecordingList() else requestStoragePermission()
     }
 
@@ -58,7 +62,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (hasStoragePermission()) {
+        if (hasStoragePermission() && !showingSettings) {
             if (::viewModel.isInitialized) render(viewModel.refresh()) else showRecordingList()
         }
     }
@@ -86,15 +90,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showRecordingList() {
-        CleanupStartup().initialize(applicationContext)
-        val repository = RecordingRepository(File("/storage/emulated/0/Sounds/Callrecord/"))
-        val settings = AppSettings(applicationContext)
-        viewModel = RecordingListViewModel(
-            repository,
-            RecordingGrouper(),
-            PlaybackController(repository),
-            RetentionCleaner(repository, settings)
-        )
+        showingSettings = false
+        supportFragmentManager.findFragmentById(R.id.content)?.let {
+            supportFragmentManager.beginTransaction().remove(it).commitNow()
+        }
+        if (!::viewModel.isInitialized) {
+            CleanupStartup().initialize(applicationContext)
+            val repository = RecordingRepository(File("/storage/emulated/0/Sounds/Callrecord/"))
+            val settings = AppSettings(applicationContext)
+            viewModel = RecordingListViewModel(
+                repository,
+                RecordingGrouper(),
+                PlaybackController(repository),
+                RetentionCleaner(repository, settings)
+            )
+        }
         content.removeAllViews()
         LayoutInflater.from(this).inflate(R.layout.fragment_recording_list, content, true)
         adapter = RecordingListAdapter(
@@ -102,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                 render(viewModel.play(recording))
                 scheduleProgressRefresh()
             },
-            onDelete = { recording -> render(viewModel.delete(recording)) }
+            onDelete = ::confirmDelete
         )
         content.findViewById<RecyclerView>(R.id.recording_list).apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
@@ -115,6 +125,31 @@ class MainActivity : AppCompatActivity() {
         }
         render(viewModel.runCleanup())
     }
+
+    private fun showSettings() {
+        if (!::viewModel.isInitialized) return
+        showingSettings = true
+        progressHandler.removeCallbacks(progressRefresh)
+        viewModel.release()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.content, SettingsFragment())
+            .commit()
+    }
+
+    private fun confirmDelete(recording: com.luhaoyang.orderecho.model.RecordingFile) {
+        val number = recording.phoneNumber ?: getString(R.string.unknown_number)
+        AlertDialog.Builder(this)
+            .setMessage(getString(R.string.delete_confirmation, number))
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.confirm) { _, _ -> render(viewModel.delete(recording)) }
+            .show()
+    }
+
+    override fun recordingStatistics(): RecordingStatistics = viewModel.recordingStatistics()
+
+    override fun runCleanupFromSettings(): Boolean = runCatching {
+        viewModel.runCleanup()
+    }.isSuccess
 
     private fun render(state: RecordingListState) {
         when (state) {
