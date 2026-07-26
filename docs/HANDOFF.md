@@ -22,6 +22,7 @@ Implement the first-release offline Android recording manager task by task.
 - Returning from the app-details settings page now rechecks storage permission and refreshes the recording list. The retry action requests permission again when it remains denied.
 - Playback publishes the current player position every 500 ms while playing, and the recording row refreshes its progress and elapsed-time display.
 - The permission test revokes both storage permissions before launch and uses UiAutomator to deny the Android permission prompt before asserting the recovery UI.
+- The permission test waits up to five seconds for Android 8's package-installer deny-button resource ID, then tries the newer permission-controller ID and a short localized fallback. It asserts that an action was found before clicking it.
 - A search with no matching phone number now has a distinct Chinese message instead of looking like an empty recording directory.
 
 ## Completed: Task 4 single-file AMR playback
