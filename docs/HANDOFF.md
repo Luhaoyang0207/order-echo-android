@@ -4,6 +4,19 @@
 
 Implement the first-release offline Android recording manager task by task.
 
+## Completed: Task 5 grouped recording list and permission flow
+
+- Added Android 8 storage-permission request and a recovery screen that opens this app's system-settings page after a refusal.
+- Added the Chinese recording screen with phone-number search, virtual month/date headers, safe unknown-number fallback, and distinct empty, missing-directory, and read-error states.
+- Added recording-row controls for play/pause, duration/progress, size, and deletion. Playback and deletion remain delegated to the previously established safe controller and repository.
+- App startup cleanup now runs after storage permission has been granted, before showing the refreshed list.
+- Added the requested Espresso permission-recovery test. Its APK compiled, but there was no connected Android device to execute it (`NO_DEVICE`).
+
+## Task 5 verification
+
+- `:app:testDebugUnitTest :app:assembleDebug` passed on 2026-07-26.
+- The targeted connected test could not run because ADB reported `No connected devices!`; run it on the BAC-AL00 before release.
+
 ## Completed: Task 4 single-file AMR playback
 
 - Added a platform-independent playback state reducer with Idle, Playing, Paused, and Chinese error states.
@@ -98,4 +111,4 @@ None for design. The actual directory path and AMR playback must be revalidated 
 
 ## Next recommended task
 
-Execute Task 5 from `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`.
+Execute Task 6 from `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`.
