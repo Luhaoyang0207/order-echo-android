@@ -19,3 +19,7 @@ No recording data leaves the phone. OrderEcho must not request the `INTERNET` pe
 ## 2026-07-26 — Kotlin/XML app with a single offline module
 
 The first implementation will use Kotlin, XML layouts, and AndroidX in one Android application module. This keeps the app appropriate for the Android 8 target and avoids unnecessary infrastructure or dependencies.
+
+## 2026-07-26 — Revalidate the recording boundary immediately before deletion
+
+Recording discovery and deletion use the canonical Callrecord directory and accept only direct regular-file children with an AMR extension. The same checks are repeated immediately before each `File.delete()` call, so a model object cannot authorize a later deletion outside the Huawei recording directory.

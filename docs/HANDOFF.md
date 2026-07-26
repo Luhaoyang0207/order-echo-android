@@ -4,6 +4,14 @@
 
 Implement the first-release offline Android recording manager task by task.
 
+## Completed: Task 2 safe recording discovery and retention domain
+
+- Added `RecordingFile`, a local model for a validated recording and its display metadata.
+- Added `RetentionPolicy` with the fixed 7, 30, 60, 90, and 180 natural-day options. Its cutoff includes today and the previous `days - 1` dates.
+- Added `RecordingRepository`, which lists only canonical, direct-child AMR files in the supplied Callrecord directory. It parses Huawei names shaped as `<number>_<yyyyMMdd>_<HHmmss>.amr` and falls back to the file modification time for malformed names.
+- Individual deletion revalidates the canonical direct-child path, regular-file state, and AMR extension immediately before deletion. It refuses directories and anything outside the configured directory.
+- Added unit coverage for retention boundaries and allowed values, filename parsing, malformed-name fallback, non-AMR/nested exclusion, outside-path deletion, and directory deletion refusal.
+
 ## Completed: Task 1 Android shell
 
 - Created the single-module Kotlin/XML Android app with application ID `com.luhaoyang.orderecho`.
@@ -53,6 +61,11 @@ The selected number means whole **natural calendar days**, including today. For 
 - `docs/DECISIONS.md`
 - `docs/superpowers/specs/2026-07-26-orderecho-design.md`
 - `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`
+- `app/src/main/java/com/luhaoyang/orderecho/model/RecordingFile.kt`
+- `app/src/main/java/com/luhaoyang/orderecho/data/RetentionPolicy.kt`
+- `app/src/main/java/com/luhaoyang/orderecho/data/RecordingRepository.kt`
+- `app/src/test/java/com/luhaoyang/orderecho/data/RetentionPolicyTest.kt`
+- `app/src/test/java/com/luhaoyang/orderecho/data/RecordingRepositoryTest.kt`
 
 ## Blockers
 
@@ -60,4 +73,4 @@ None for design. The actual directory path and AMR playback must be revalidated 
 
 ## Next recommended task
 
-Execute Task 2 from `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`: add the safe recording repository and natural-day retention domain with tests.
+Execute Task 3 from `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`.
