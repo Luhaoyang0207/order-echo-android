@@ -39,4 +39,24 @@ class PlaybackStateTest {
 
         assertEquals(PlaybackState.Idle, result)
     }
+
+    @Test
+    fun completingReturnsToIdle() {
+        val result = reducePlaybackState(
+            PlaybackState.Playing(File("recording.amr"), 300, 1_000),
+            PlaybackEvent.Complete
+        )
+
+        assertEquals(PlaybackState.Idle, result)
+    }
+
+    @Test
+    fun failingPublishesThePlaybackError() {
+        val result = reducePlaybackState(
+            PlaybackState.Playing(File("recording.amr"), 300, 1_000),
+            PlaybackEvent.Fail("录音播放失败")
+        )
+
+        assertEquals(PlaybackState.Error("录音播放失败"), result)
+    }
 }

@@ -3,6 +3,7 @@ package com.luhaoyang.orderecho.playback
 import android.media.MediaPlayer
 import com.luhaoyang.orderecho.data.RecordingRepository
 import com.luhaoyang.orderecho.model.RecordingFile
+import java.io.File
 
 class PlaybackController(
     private val repository: RecordingRepository,
@@ -12,7 +13,7 @@ class PlaybackController(
     private var playbackState: PlaybackState = PlaybackState.Idle
 
     fun play(recording: RecordingFile) {
-        if (!runCatching { isValidatedRecording(recording) }.getOrDefault(false)) {
+        if (runCatching { validatedCanonicalFile(recording) }.getOrNull() == null) {
             releasePlayer()
             publish(PlaybackEvent.Fail(PLAYBACK_ERROR))
             return
@@ -23,7 +24,9 @@ class PlaybackController(
         val newPlayer = playerFactory()
         player = newPlayer
         try {
-            newPlayer.setDataSource(recording.file.absolutePath)
+            val playbackFile = validatedCanonicalFile(recording)
+                ?: throw IllegalArgumentException("Recording is no longer valid")
+            newPlayer.setDataSource(playbackFile.path)
             newPlayer.setOnCompletionListener {
                 if (player === newPlayer) {
                     releasePlayer()
@@ -39,7 +42,7 @@ class PlaybackController(
             }
             newPlayer.prepare()
             newPlayer.start()
-            publish(PlaybackEvent.Start(recording.file, newPlayer.duration))
+            publish(PlaybackEvent.Start(playbackFile, newPlayer.duration))
         } catch (_: Exception) {
             if (player === newPlayer) {
                 releasePlayer()
@@ -72,9 +75,12 @@ class PlaybackController(
         stop()
     }
 
-    private fun isValidatedRecording(recording: RecordingFile): Boolean {
+    private fun validatedCanonicalFile(recording: RecordingFile): File? {
         val requestedFile = recording.file.canonicalFile
-        return repository.list().any { it.file.canonicalFile == requestedFile }
+        return repository.list()
+            .firstOrNull { it.file.canonicalFile == requestedFile }
+            ?.file
+            ?.canonicalFile
     }
 
     private fun releasePlayer() {

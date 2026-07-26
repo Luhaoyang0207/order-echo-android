@@ -8,6 +8,7 @@ Implement the first-release offline Android recording manager task by task.
 
 - Added a platform-independent playback state reducer with Idle, Playing, Paused, and Chinese error states.
 - Added `PlaybackController`, which accepts a recording only when the repository currently validates and lists it.
+- Playback is revalidated immediately before `MediaPlayer.setDataSource`, which opens only the returned canonical recording path.
 - Starting playback releases the prior `MediaPlayer`; completion, errors, stop, and release all free player resources. Idle pause, stop, and release calls are safe.
 - Added state-transition coverage for replacing an active file, pause state retention, and stopping to Idle.
 
