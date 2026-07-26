@@ -4,6 +4,17 @@
 
 Implement the first-release offline Android recording manager task by task.
 
+## Completed: Task 4 single-file AMR playback
+
+- Added a platform-independent playback state reducer with Idle, Playing, Paused, and Chinese error states.
+- Added `PlaybackController`, which accepts a recording only when the repository currently validates and lists it.
+- Starting playback releases the prior `MediaPlayer`; completion, errors, stop, and release all free player resources. Idle pause, stop, and release calls are safe.
+- Added state-transition coverage for replacing an active file, pause state retention, and stopping to Idle.
+
+## Task 4 verification
+
+- `:app:testDebugUnitTest :app:assembleDebug` passed on 2026-07-26.
+
 ## Completed: Task 3 settings, grouping, and retention scheduling
 
 - Added `AppSettings`, backed by the private `order_echo_settings` preferences file. It defaults to 30 days, persists only the five approved retention values, and records the latest cleanup completion time.
@@ -86,4 +97,4 @@ None for design. The actual directory path and AMR playback must be revalidated 
 
 ## Next recommended task
 
-Execute Task 4 from `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`.
+Execute Task 5 from `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`.

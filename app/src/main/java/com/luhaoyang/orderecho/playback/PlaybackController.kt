@@ -1,0 +1,98 @@
+package com.luhaoyang.orderecho.playback
+
+import android.media.MediaPlayer
+import com.luhaoyang.orderecho.data.RecordingRepository
+import com.luhaoyang.orderecho.model.RecordingFile
+
+class PlaybackController(
+    private val repository: RecordingRepository,
+    private val playerFactory: () -> MediaPlayer = { MediaPlayer() }
+) {
+    private var player: MediaPlayer? = null
+    private var playbackState: PlaybackState = PlaybackState.Idle
+
+    fun play(recording: RecordingFile) {
+        if (!runCatching { isValidatedRecording(recording) }.getOrDefault(false)) {
+            releasePlayer()
+            publish(PlaybackEvent.Fail(PLAYBACK_ERROR))
+            return
+        }
+
+        releasePlayer()
+
+        val newPlayer = playerFactory()
+        player = newPlayer
+        try {
+            newPlayer.setDataSource(recording.file.absolutePath)
+            newPlayer.setOnCompletionListener {
+                if (player === newPlayer) {
+                    releasePlayer()
+                    publish(PlaybackEvent.Complete)
+                }
+            }
+            newPlayer.setOnErrorListener { _, _, _ ->
+                if (player === newPlayer) {
+                    releasePlayer()
+                    publish(PlaybackEvent.Fail(PLAYBACK_ERROR))
+                }
+                true
+            }
+            newPlayer.prepare()
+            newPlayer.start()
+            publish(PlaybackEvent.Start(recording.file, newPlayer.duration))
+        } catch (_: Exception) {
+            if (player === newPlayer) {
+                releasePlayer()
+                publish(PlaybackEvent.Fail(PLAYBACK_ERROR))
+            }
+        }
+    }
+
+    fun pause() {
+        val activePlayer = player ?: return
+        if (playbackState is PlaybackState.Playing) {
+            try {
+                activePlayer.pause()
+                publish(PlaybackEvent.Pause(activePlayer.currentPosition))
+            } catch (_: IllegalStateException) {
+                releasePlayer()
+                publish(PlaybackEvent.Fail(PLAYBACK_ERROR))
+            }
+        }
+    }
+
+    fun stop() {
+        releasePlayer()
+        publish(PlaybackEvent.Stop)
+    }
+
+    fun state(): PlaybackState = playbackState
+
+    fun release() {
+        stop()
+    }
+
+    private fun isValidatedRecording(recording: RecordingFile): Boolean {
+        val requestedFile = recording.file.canonicalFile
+        return repository.list().any { it.file.canonicalFile == requestedFile }
+    }
+
+    private fun releasePlayer() {
+        val activePlayer = player ?: return
+        player = null
+        try {
+            activePlayer.stop()
+        } catch (_: IllegalStateException) {
+            // The player can already be stopped after an error or completion.
+        }
+        activePlayer.release()
+    }
+
+    private fun publish(event: PlaybackEvent) {
+        playbackState = reducePlaybackState(playbackState, event)
+    }
+
+    private companion object {
+        const val PLAYBACK_ERROR = "录音播放失败"
+    }
+}

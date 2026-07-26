@@ -23,3 +23,7 @@ The first implementation will use Kotlin, XML layouts, and AndroidX in one Andro
 ## 2026-07-26 — Revalidate the recording boundary immediately before deletion
 
 Recording discovery and deletion use the canonical Callrecord directory and accept only direct regular-file children with an AMR extension. The same checks are repeated immediately before each `File.delete()` call, so a model object cannot authorize a later deletion outside the Huawei recording directory.
+
+## 2026-07-26 — Use repository validation before AMR playback
+
+The playback controller asks `RecordingRepository` for currently validated recordings before opening a file with `MediaPlayer`. This keeps playback within the same canonical direct-child AMR boundary as discovery and deletion, while leaving the Huawei-generated files unchanged.
