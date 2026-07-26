@@ -4,6 +4,18 @@
 
 Implement the first-release offline Android recording manager task by task.
 
+## Completed: Task 3 settings, grouping, and retention scheduling
+
+- Added `AppSettings`, backed by the private `order_echo_settings` preferences file. It defaults to 30 days, persists only the five approved retention values, and records the latest cleanup completion time.
+- Added in-memory `RecordingGrouper` month/date sections. Both month and date are sorted newest first; the underlying Huawei recording files remain untouched.
+- Added `RetentionCleaner`, which applies the existing natural-day retention rule and calls the repository for every deletion. It counts failures and continues if a deletion fails or throws.
+- Added a unique once-daily WorkManager job plus a boot-completed receiver that only restores that schedule. The worker uses the fixed `Sounds/Callrecord` directory and no network capability.
+- Added unit coverage for the settings default, persistence, invalid selection rejection, and descending virtual grouping.
+
+## Task 3 verification
+
+- `:app:testDebugUnitTest :app:assembleDebug` passed on 2026-07-26.
+
 ## Completed: Task 2 safe recording discovery and retention domain
 
 - Added `RecordingFile`, a local model for a validated recording and its display metadata.
@@ -73,4 +85,4 @@ None for design. The actual directory path and AMR playback must be revalidated 
 
 ## Next recommended task
 
-Execute Task 3 from `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`.
+Execute Task 4 from `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`.
