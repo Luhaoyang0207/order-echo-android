@@ -2,7 +2,15 @@
 
 ## Current goal
 
-Create the first offline Android app for a single restaurant to review and retain its Huawei-generated call recordings.
+Implement the first-release offline Android recording manager task by task.
+
+## Completed: Task 1 Android shell
+
+- Created the single-module Kotlin/XML Android app with application ID `com.luhaoyang.orderecho`.
+- Set `minSdk` to 26 and `targetSdk` to 28.
+- Added only storage and boot-completed permissions; the manifest has no `INTERNET` permission.
+- Added the Simplified Chinese launcher activity title `餐厅通话录音` and a configuration test for the API 26 minimum.
+- Verified `:app:testDebugUnitTest :app:assembleDebug`; the debug APK is produced at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Confirmed environment
 
@@ -52,4 +60,4 @@ None for design. The actual directory path and AMR playback must be revalidated 
 
 ## Next recommended task
 
-Execute `docs/superpowers/plans/2026-07-26-orderecho-first-release.md` task by task. Initialize the empty local repository and connect it to `Luhaoyang0207/order-echo-android` before making the first planned commit.
+Execute Task 2 from `docs/superpowers/plans/2026-07-26-orderecho-first-release.md`: add the safe recording repository and natural-day retention domain with tests.
