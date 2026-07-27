@@ -145,9 +145,10 @@ class MainActivity : AppCompatActivity(), SettingsHost {
         showingSettings = true
         progressHandler.removeCallbacks(progressRefresh)
         viewModel.release()
+        content.removeAllViews()
         supportFragmentManager.beginTransaction()
             .replace(R.id.content, SettingsFragment())
-            .commit()
+            .commitNow()
     }
 
     private fun confirmDelete(recording: com.luhaoyang.orderecho.model.RecordingFile) {

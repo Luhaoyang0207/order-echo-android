@@ -1,5 +1,9 @@
 # Decisions
 
+## 2026-07-27 — Replace direct views before showing a Fragment screen
+
+The recording list is inflated directly into the activity's content container, while Settings is a Fragment. Before adding or replacing the Settings Fragment, the activity must remove direct child views from that container; otherwise the Fragment is drawn over the recording interface instead of replacing it.
+
 ## 2026-07-27 — Keep directory scans metadata-free
 
 Recording discovery, retention cleanup, statistics, and playback-file validation must not read AMR media metadata. These paths can process many files, so duration extraction is limited to an explicitly requested, single validated recording and any future caller must run it off the UI thread. This keeps large recording archives responsive without weakening the storage boundary.

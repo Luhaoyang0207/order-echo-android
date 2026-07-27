@@ -4,6 +4,17 @@
 
 Validate the completed first release on the Huawei BAC-AL00 physical device.
 
+## Completed: settings screen replaces recording content
+
+- The Settings tab now clears direct recording-list views before synchronously replacing the content container with `SettingsFragment`.
+- This fixes the observed screen overlay where recording controls and settings radio buttons appeared on top of one another.
+- Added an instrumentation regression test asserting that Settings is visible while the recording list no longer exists in the content container.
+
+## Settings overlay verification
+
+- `:app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest` passed on 2026-07-27.
+- The navigation instrumentation test requires a connected Android device and has not run in this environment.
+
 ## Completed: Huawei continuous-timestamp filename support
 
 - Recording filenames in the form `number_yyyymmddhhmmss.amr` now parse the phone number and timestamp correctly.
