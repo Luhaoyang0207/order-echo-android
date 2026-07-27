@@ -10,6 +10,7 @@ Implement the approved Today-first recording-list redesign, then validate it on 
 - Today starts expanded; yesterday and earlier dates start collapsed; date headers show their recording counts.
 - Recording rows will prioritize phone number, time/duration, and playback. Deletion moves to a low-emphasis overflow action.
 - Full design: `docs/superpowers/specs/2026-07-27-recording-list-redesign-design.md`.
+- Implementation plan: `docs/superpowers/plans/2026-07-27-today-first-recording-list.md`.
 
 ## Completed: settings screen replaces recording content
 
