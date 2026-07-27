@@ -36,22 +36,37 @@ class RecordingRepository(
 
     fun list(): List<RecordingFile> = scan().recordings
 
+    /**
+     * Reads media metadata only for a single recording that has just been
+     * revalidated. Call this from background work when a duration is needed.
+     */
+    fun durationFor(recording: RecordingFile): Int? {
+        return runCatching {
+            val validatedFile = validatedRecordingFile(recording.file) ?: return null
+            durationReader(validatedFile)?.takeIf { it > 0 }
+        }.getOrNull()
+    }
+
     fun delete(recording: RecordingFile): Boolean {
         return runCatching {
             val file = recording.file
-            isSafeRecordingFile(file) && deleteFile(file)
+            validatedRecordingFile(file) != null && deleteFile(file)
         }.getOrDefault(false)
     }
 
-    private fun isSafeRecordingFile(file: File): Boolean {
+    private fun isSafeRecordingFile(file: File): Boolean = validatedRecordingFile(file) != null
+
+    private fun validatedRecordingFile(file: File): File? {
         val canonicalBaseDirectory = baseDirectory.canonicalFile
         val canonicalFile = file.canonicalFile
         val directChildPrefix = canonicalBaseDirectory.path + File.separator
 
-        return canonicalFile.path.startsWith(directChildPrefix) &&
+        return canonicalFile.takeIf {
+            canonicalFile.path.startsWith(directChildPrefix) &&
             canonicalFile.parentFile == canonicalBaseDirectory &&
             canonicalFile.isFile &&
             canonicalFile.name.endsWith(AMR_EXTENSION, ignoreCase = true)
+        }
     }
 
     private fun toRecordingFile(file: File): RecordingFile {
@@ -70,7 +85,7 @@ class RecordingRepository(
             phoneNumber = match?.groupValues?.get(1)?.takeIf(String::isNotBlank),
             recordedAt = parsedDateTime ?: lastModifiedDateTime(file),
             sizeBytes = file.length(),
-            durationMillis = runCatching { durationReader(file)?.takeIf { it > 0 } }.getOrNull()
+            durationMillis = null
         )
     }
 

@@ -1,5 +1,9 @@
 # Decisions
 
+## 2026-07-27 — Keep directory scans metadata-free
+
+Recording discovery, retention cleanup, statistics, and playback-file validation must not read AMR media metadata. These paths can process many files, so duration extraction is limited to an explicitly requested, single validated recording and any future caller must run it off the UI thread. This keeps large recording archives responsive without weakening the storage boundary.
+
 ## 2026-07-26 — Manage Huawei recordings rather than record calls
 
 Huawei's built-in automatic call recording is already proven to create AMR files on the restaurant phone. OrderEcho will only manage those existing files. This avoids root access, protected telephony audio APIs, and fragile call-recording behavior.

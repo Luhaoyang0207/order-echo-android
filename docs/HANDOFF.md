@@ -4,6 +4,18 @@
 
 Validate the completed first release on the Huawei BAC-AL00 physical device.
 
+## Completed: metadata-free recording scans
+
+- Recording discovery, cleanup, statistics, and playback-file revalidation no longer open media metadata for every AMR file.
+- A recording's initial duration is intentionally unknown; Android `MediaPlayer` supplies it when that recording is actually played.
+- `RecordingRepository.durationFor()` is reserved for a future background-only, single-recording duration enrichment flow. It must not be used by a scan, cleanup, or UI-thread refresh.
+- A regression test proves directory scanning does not invoke the duration reader.
+
+## Metadata-free scan verification
+
+- The regression test failed against the previous implementation and passed after the fix.
+- `:app:testDebugUnitTest :app:assembleDebug` and `git diff --check` passed on 2026-07-27.
+
 ## Completed: final-review Critical/Important fixes
 
 - Filename timestamps now use strict calendar/time resolution. Impossible values such as `20260230` fall back to the file's last-modified time instead of being silently normalized.

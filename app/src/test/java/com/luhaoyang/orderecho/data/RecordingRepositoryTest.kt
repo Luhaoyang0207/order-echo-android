@@ -124,18 +124,25 @@ class RecordingRepositoryTest {
     }
 
     @Test
-    fun derivesRecordingDurationSafelyDuringScan() {
+    fun scanDoesNotReadDurationForEveryRecording() {
         File(baseDirectory, "4712345678_20260726_141530.amr").writeText("amr")
+        var durationReadCount = 0
         val repository = RecordingRepository(
             baseDirectory = baseDirectory,
-            durationReader = { 125_000 }
+            durationReader = {
+                durationReadCount++
+                125_000
+            }
         )
 
-        assertEquals(125_000, repository.list().single().durationMillis)
+        val recording = repository.list().single()
+
+        assertEquals(0, durationReadCount)
+        assertEquals(null, recording.durationMillis)
     }
 
     @Test
-    fun unavailableDurationDoesNotHideAnOtherwiseValidRecording() {
+    fun unavailableLazyDurationDoesNotHideAnOtherwiseValidRecording() {
         File(baseDirectory, "4712345678_20260726_141530.amr").writeText("amr")
         val repository = RecordingRepository(
             baseDirectory = baseDirectory,
@@ -146,6 +153,7 @@ class RecordingRepositoryTest {
 
         assertEquals(1, result.recordings.size)
         assertEquals(null, result.recordings.single().durationMillis)
+        assertEquals(null, repository.durationFor(result.recordings.single()))
         assertEquals(0, result.failedCount)
     }
 
