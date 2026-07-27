@@ -26,6 +26,8 @@ import com.luhaoyang.orderecho.cleanup.CleanupStartup
 import com.luhaoyang.orderecho.cleanup.CleanupResult
 import com.luhaoyang.orderecho.cleanup.RetentionCleaner
 import com.luhaoyang.orderecho.data.AppSettings
+import com.luhaoyang.orderecho.data.DateGroup
+import com.luhaoyang.orderecho.data.MonthGroup
 import com.luhaoyang.orderecho.data.RecordingGrouper
 import com.luhaoyang.orderecho.data.RecordingRepository
 import com.luhaoyang.orderecho.playback.PlaybackController
@@ -176,7 +178,15 @@ class MainActivity : AppCompatActivity(), SettingsHost {
                     visibility = if (state.scanFailedCount > 0) View.VISIBLE else View.GONE
                     text = getString(R.string.recordings_scan_warning, state.scanFailedCount)
                 }
-                adapter.submit(state.groups, viewModel.playbackState())
+                adapter.submit(
+                    state.groups.map { month ->
+                        MonthGroup(
+                            month = month.month,
+                            dates = month.dates.map { date -> DateGroup(date.date, date.recordings) }
+                        )
+                    },
+                    viewModel.playbackState()
+                )
                 val playbackError = viewModel.playbackState() as? com.luhaoyang.orderecho.playback.PlaybackState.Error
                 if (playbackError != null) Toast.makeText(this, playbackError.message, Toast.LENGTH_SHORT).show()
             }

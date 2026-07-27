@@ -4,6 +4,14 @@
 
 Implement the approved Today-first recording-list redesign, then validate it on the Huawei BAC-AL00 physical device.
 
+## Completed: Today-first recording-list Task 1 expansion state
+
+- `RecordingListViewModel` now keeps UI-only expanded-date state. Refreshing or clearing search expands today only; a non-empty matching search expands every matching date; individual dates can be toggled independently.
+- The ViewModel now exposes visible month/date groups carrying each date's expansion state while retaining `RecordingGrouper`'s descending order.
+- The existing activity converts these visible groups back to the adapter's current input only as a temporary compatibility boundary. The follow-up adapter/UI task must render the expansion state and route date-header taps to `toggleDate`.
+- Added ViewModel coverage for the default, toggle, and search expansion rules using today, yesterday, and an older recording.
+- `:app:testDebugUnitTest --tests com.luhaoyang.orderecho.ui.RecordingListViewModelTest`, the full `:app:testDebugUnitTest`, and `git diff --check` passed on 2026-07-27 with Android Studio JBR 17.
+
 ## Approved recording-list redesign
 
 - User selected the Today-first layout from the visual comparison on 2026-07-27.

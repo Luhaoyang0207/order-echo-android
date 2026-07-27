@@ -6,6 +6,8 @@ import com.luhaoyang.orderecho.data.RecordingRepository
 import com.luhaoyang.orderecho.model.RecordingFile
 import com.luhaoyang.orderecho.playback.PlaybackCommands
 import com.luhaoyang.orderecho.playback.PlaybackState
+import java.time.LocalDate
+import java.time.YearMonth
 
 class RecordingListViewModel(
     private val repository: RecordingRepository,
@@ -16,6 +18,7 @@ class RecordingListViewModel(
     private var allRecordings: List<RecordingFile> = emptyList()
     private var query: String = ""
     private var scanFailedCount: Int = 0
+    private val expandedDates = mutableSetOf<LocalDate>()
 
     fun refresh(): RecordingListState {
         if (!repository.baseDirectory.isDirectory) return RecordingListState.MissingDirectory
@@ -23,19 +26,36 @@ class RecordingListViewModel(
             val scan = repository.scan()
             allRecordings = scan.recordings
             scanFailedCount = scan.failedCount
+            expandedDates.clear()
+            expandedDates += LocalDate.now()
             displayedState()
         }.getOrElse { RecordingListState.Error }
     }
 
     fun setQuery(query: String): RecordingListState {
         this.query = query.trim()
+        if (this.query.isNotEmpty()) {
+            expandedDates.clear()
+            expandedDates += allRecordings
+                .filter { it.phoneNumber.orEmpty().contains(this.query) }
+                .map { it.recordedAt.toLocalDate() }
+        }
         return displayedState()
     }
 
     fun clearQuery(): RecordingListState {
         query = ""
+        expandedDates.clear()
+        expandedDates += LocalDate.now()
         return displayedState()
     }
+
+    fun toggleDate(date: LocalDate): RecordingListState {
+        if (!expandedDates.add(date)) expandedDates.remove(date)
+        return displayedState()
+    }
+
+    fun visibleGroups(state: RecordingListState.Content): List<VisibleMonthGroup> = state.groups
 
     fun play(recording: RecordingFile): RecordingListState {
         val playback = playbackController.state()
@@ -92,7 +112,21 @@ class RecordingListViewModel(
         return if (filtered.isEmpty()) {
             RecordingListState.NoMatches
         } else {
-            RecordingListState.Content(grouper.group(filtered), scanFailedCount)
+            RecordingListState.Content(
+                grouper.group(filtered).map { monthGroup ->
+                    VisibleMonthGroup(
+                        month = monthGroup.month,
+                        dates = monthGroup.dates.map { dateGroup ->
+                            VisibleDateGroup(
+                                date = dateGroup.date,
+                                recordings = dateGroup.recordings,
+                                expanded = dateGroup.date in expandedDates
+                            )
+                        }
+                    )
+                },
+                scanFailedCount
+            )
         }
     }
 }
@@ -108,13 +142,24 @@ data class RecordingStatistics(
     val oldestRecordedAt: java.time.LocalDateTime?
 )
 
+data class VisibleDateGroup(
+    val date: LocalDate,
+    val recordings: List<RecordingFile>,
+    val expanded: Boolean
+)
+
+data class VisibleMonthGroup(
+    val month: YearMonth,
+    val dates: List<VisibleDateGroup>
+)
+
 sealed interface RecordingListState {
     data object MissingDirectory : RecordingListState
     data object Empty : RecordingListState
     data object NoMatches : RecordingListState
     data object Error : RecordingListState
     data class Content(
-        val groups: List<com.luhaoyang.orderecho.data.MonthGroup>,
+        val groups: List<VisibleMonthGroup>,
         val scanFailedCount: Int = 0
     ) : RecordingListState
 }

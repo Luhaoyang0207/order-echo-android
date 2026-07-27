@@ -7,25 +7,20 @@ import com.luhaoyang.orderecho.model.RecordingFile
 import com.luhaoyang.orderecho.playback.PlaybackCommands
 import com.luhaoyang.orderecho.playback.PlaybackState
 import java.io.File
+import java.time.LocalDate
 import java.nio.file.Files
 import java.time.LocalDateTime
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RecordingListViewModelTest {
     private val baseDirectory = Files.createTempDirectory("recording-list").toFile()
-    private val recordingFile = File(baseDirectory, "4712345678_20260726_141530.amr").apply {
-        writeText("amr")
-    }
-    private val recording = RecordingFile(
-        file = recordingFile,
-        phoneNumber = "4712345678",
-        recordedAt = LocalDateTime.of(2026, 7, 26, 14, 15, 30),
-        sizeBytes = recordingFile.length(),
-        durationMillis = 5_000
-    )
+    private val recording = createRecording(LocalDate.now(), "4712345678")
+    private val yesterdayRecording = createRecording(LocalDate.now().minusDays(1), "4712345679")
+    private val olderRecording = createRecording(LocalDate.now().minusDays(7), "4712345680")
 
     @After
     fun tearDown() {
@@ -41,6 +36,33 @@ class RecordingListViewModelTest {
         val recovered = viewModel.clearQuery()
 
         assertTrue(recovered is RecordingListState.Content)
+    }
+
+    @Test
+    fun refreshExpandsOnlyTodayByDefault() {
+        val state = viewModel().refresh() as RecordingListState.Content
+
+        val dates = state.groups.flatMap { it.dates }
+        assertTrue(dates.single { it.date == LocalDate.now() }.expanded)
+        assertFalse(dates.single { it.date == LocalDate.now().minusDays(1) }.expanded)
+    }
+
+    @Test
+    fun togglingAnOlderDateShowsOnlyThatDatesRows() {
+        val viewModel = viewModel()
+        viewModel.refresh()
+
+        val state = viewModel.toggleDate(LocalDate.now().minusDays(1)) as RecordingListState.Content
+
+        assertTrue(state.groups.flatMap { it.dates }
+            .single { it.date == LocalDate.now().minusDays(1) }.expanded)
+    }
+
+    @Test
+    fun searchExpandsEveryDateThatContainsAMatch() {
+        val state = viewModel().apply { refresh() }.setQuery("471") as RecordingListState.Content
+
+        assertTrue(state.groups.flatMap { it.dates }.all { it.expanded })
     }
 
     @Test
@@ -85,6 +107,18 @@ class RecordingListViewModelTest {
         playbackController = playback,
         cleanup = cleanup
     )
+
+    private fun createRecording(date: LocalDate, phoneNumber: String): RecordingFile {
+        val file = File(baseDirectory, "${phoneNumber}_${date.toString().replace("-", "")}_141530.amr")
+            .apply { writeText("amr") }
+        return RecordingFile(
+            file = file,
+            phoneNumber = phoneNumber,
+            recordedAt = LocalDateTime.of(date.year, date.month, date.dayOfMonth, 14, 15, 30),
+            sizeBytes = file.length(),
+            durationMillis = 5_000
+        )
+    }
 
     private class FakePlayback(
         private var currentState: PlaybackState = PlaybackState.Idle
