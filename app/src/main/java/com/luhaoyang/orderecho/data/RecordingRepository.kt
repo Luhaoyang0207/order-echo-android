@@ -95,7 +95,7 @@ class RecordingRepository(
 
     private companion object {
         const val AMR_EXTENSION = ".amr"
-        val HUAWEI_FILE_NAME = Regex("^(.+?)_(\\d{8})_(\\d{6})\\.amr$", RegexOption.IGNORE_CASE)
+        val HUAWEI_FILE_NAME = Regex("^(.+?)_(\\d{8})_?(\\d{6})\\.amr$", RegexOption.IGNORE_CASE)
         val HUAWEI_DATE_TIME_FORMAT: DateTimeFormatter = DateTimeFormatter
             .ofPattern("uuuuMMdd_HHmmss")
             .withResolverStyle(ResolverStyle.STRICT)

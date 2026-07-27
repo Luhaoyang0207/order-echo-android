@@ -4,6 +4,16 @@
 
 Validate the completed first release on the Huawei BAC-AL00 physical device.
 
+## Completed: Huawei continuous-timestamp filename support
+
+- Recording filenames in the form `number_yyyymmddhhmmss.amr` now parse the phone number and timestamp correctly.
+- The existing `number_yyyymmdd_hhmmss.amr` format remains supported.
+- A regression test covers a phone number containing spaces and a continuous timestamp.
+
+## Outstanding device observation
+
+- The installed device reports overlapping text in Settings, but the current layout already has a vertical `RadioGroup`. A screenshot is required to identify whether the problem is an old APK, device font/rendering behavior, or another view.
+
 ## Completed: metadata-free recording scans
 
 - Recording discovery, cleanup, statistics, and playback-file revalidation no longer open media metadata for every AMR file.

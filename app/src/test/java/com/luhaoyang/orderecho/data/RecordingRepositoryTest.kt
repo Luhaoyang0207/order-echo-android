@@ -39,6 +39,16 @@ class RecordingRepositoryTest {
     }
 
     @Test
+    fun parsesHuaweiNameWithSpaceSeparatedNumberAndContinuousTimestamp() {
+        File(baseDirectory, "47 123 45 678_20260726141530.amr").writeText("amr")
+
+        val recording = repository.list().single()
+
+        assertEquals("47 123 45 678", recording.phoneNumber)
+        assertEquals(LocalDateTime.of(2026, 7, 26, 14, 15, 30), recording.recordedAt)
+    }
+
+    @Test
     fun ignoresNonAmrFilesAndNestedAmrFiles() {
         File(baseDirectory, "notes.txt").writeText("not a recording")
         File(baseDirectory, "4712345678_20260726_141530.mp3").writeText("not a recording")
