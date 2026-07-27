@@ -10,7 +10,7 @@ On the restaurant's Huawei BAC-AL00 running Android 8.0, the system phone app al
 /storage/emulated/0/Sounds/Callrecord/
 ```
 
-OrderEcho will scan those `.amr` files, show them grouped by month and date, play them inside the app, and remove recordings older than the selected retention period.
+OrderEcho scans those `.amr` files, opens today's recordings first, keeps older date sections compact until tapped, plays recordings inside the app, and removes recordings older than the selected retention period.
 
 ## What it does not do
 

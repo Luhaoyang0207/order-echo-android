@@ -42,4 +42,11 @@
     <string name="never_cleaned">尚未清理</string>
     <string name="oldest_recording">%1$d年%2$d月%3$d日</string>
     <string name="cleanup_status">录音数量：%1$d\n占用空间：%2$s\n最早录音：%3$s\n上次清理：%4$s\n清理结果：%5$s</string>
+    <string name="today_date_header">今天 · %1$d 条</string>
+    <string name="yesterday_date_header">昨天 · %1$d 条</string>
+    <string name="recording_count_header">通话录音 · %1$d 条</string>
+    <string name="expand_date">▶</string>
+    <string name="collapse_date">▼</string>
+    <string name="expand_or_collapse_date">展开或收起日期录音</string>
+    <string name="more">更多</string>
 </resources>

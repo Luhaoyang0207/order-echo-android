@@ -2,7 +2,21 @@
 
 ## Current goal
 
-Implement the approved Today-first recording-list redesign, then validate it on the Huawei BAC-AL00 physical device.
+Validate the approved Today-first recording-list redesign on the Huawei BAC-AL00 physical device.
+
+## Completed: Today-first recording-list Task 2 UI
+
+- The recording screen now shows a compact `通话录音 · N 条` heading, with today's date expanded and older dates rendered as 48dp expandable headers carrying their recording counts.
+- Each date header has a visual expand/collapse indicator and routes only that date's tap to `RecordingListViewModel.toggleDate`; collapsed groups contribute no recording rows.
+- Recording rows are rounded white cards with the number, time/duration, and a primary play/pause action. Progress, elapsed time, and Stop remain hidden until that exact row is active; the low-emphasis `更多` action preserves the existing deletion confirmation flow.
+- Added an Espresso regression test using only an app-cache fixture directory. It verifies a yesterday header reveals and then hides its recording, without reading the real Huawei Callrecord directory.
+- The test-only directory override changes no production default: ordinary runs still use `/storage/emulated/0/Sounds/Callrecord/`. No scan now reads media metadata.
+
+## Task 2 verification
+
+- The new test was first compiled red against the absent test-directory seam (`recordingDirectoryForTesting` unresolved), then compiled successfully after the minimal UI/integration implementation.
+- `:app:assembleDebugAndroidTest` passed on 2026-07-27 with Android Studio JBR 17.
+- Run `:app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest` and execute the new test on a connected Android device before release; no device is connected in this environment.
 
 ## Completed: Today-first recording-list Task 1 expansion state
 

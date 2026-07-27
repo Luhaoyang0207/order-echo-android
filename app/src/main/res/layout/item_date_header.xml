@@ -1,2 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/date_header" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="10dp" android:paddingBottom="6dp" android:textColor="#555555" android:textSize="16sp" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="48dp"
+    android:orientation="horizontal"
+    android:paddingStart="4dp"
+    android:paddingEnd="8dp">
+    <TextView
+        android:id="@+id/expand_indicator"
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/expand_or_collapse_date"
+        android:textColor="#555555"
+        android:textSize="14sp" />
+    <TextView
+        android:id="@+id/date_header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="#555555"
+        android:textSize="16sp" />
+</LinearLayout>

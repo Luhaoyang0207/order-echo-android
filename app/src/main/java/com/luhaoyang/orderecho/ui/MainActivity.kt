@@ -26,8 +26,6 @@ import com.luhaoyang.orderecho.cleanup.CleanupStartup
 import com.luhaoyang.orderecho.cleanup.CleanupResult
 import com.luhaoyang.orderecho.cleanup.RetentionCleaner
 import com.luhaoyang.orderecho.data.AppSettings
-import com.luhaoyang.orderecho.data.DateGroup
-import com.luhaoyang.orderecho.data.MonthGroup
 import com.luhaoyang.orderecho.data.RecordingGrouper
 import com.luhaoyang.orderecho.data.RecordingRepository
 import com.luhaoyang.orderecho.playback.PlaybackController
@@ -101,7 +99,7 @@ class MainActivity : AppCompatActivity(), SettingsHost {
         if (!::viewModel.isInitialized) {
             CleanupStartup().initialize(applicationContext)
             val repository = RecordingRepository(
-                baseDirectory = File("/storage/emulated/0/Sounds/Callrecord/"),
+                baseDirectory = recordingDirectoryForTesting ?: File("/storage/emulated/0/Sounds/Callrecord/"),
                 durationReader = RecordingDurationReader()::read
             )
             val settings = AppSettings(applicationContext)
@@ -124,7 +122,8 @@ class MainActivity : AppCompatActivity(), SettingsHost {
                 progressHandler.removeCallbacks(progressRefresh)
                 render(viewModel.stopPlayback())
             },
-            onDelete = ::confirmDelete
+            onDelete = ::confirmDelete,
+            onToggleDate = { date -> render(viewModel.toggleDate(date)) }
         )
         content.findViewById<RecyclerView>(R.id.recording_list).apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
@@ -178,14 +177,10 @@ class MainActivity : AppCompatActivity(), SettingsHost {
                     visibility = if (state.scanFailedCount > 0) View.VISIBLE else View.GONE
                     text = getString(R.string.recordings_scan_warning, state.scanFailedCount)
                 }
-                adapter.submit(
-                    state.groups.map { month ->
-                        MonthGroup(
-                            month = month.month,
-                            dates = month.dates.map { date -> DateGroup(date.date, date.recordings) }
-                        )
-                    },
-                    viewModel.playbackState()
+                adapter.submit(state.groups, viewModel.playbackState())
+                content.findViewById<TextView>(R.id.recording_count_header).text = getString(
+                    R.string.recording_count_header,
+                    state.groups.sumOf { month -> month.dates.sumOf { it.recordings.size } }
                 )
                 val playbackError = viewModel.playbackState() as? com.luhaoyang.orderecho.playback.PlaybackState.Error
                 if (playbackError != null) Toast.makeText(this, playbackError.message, Toast.LENGTH_SHORT).show()
@@ -217,9 +212,10 @@ class MainActivity : AppCompatActivity(), SettingsHost {
         }
     }
 
-    private companion object {
+    companion object {
         const val STORAGE_PERMISSION_REQUEST = 41
         const val PROGRESS_REFRESH_MILLIS = 500L
         val STORAGE_PERMISSIONS = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        internal var recordingDirectoryForTesting: File? = null
     }
 }
