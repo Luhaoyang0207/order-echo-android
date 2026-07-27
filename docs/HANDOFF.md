@@ -2,7 +2,14 @@
 
 ## Current goal
 
-Validate the completed first release on the Huawei BAC-AL00 physical device.
+Implement the approved Today-first recording-list redesign, then validate it on the Huawei BAC-AL00 physical device.
+
+## Approved recording-list redesign
+
+- User selected the Today-first layout from the visual comparison on 2026-07-27.
+- Today starts expanded; yesterday and earlier dates start collapsed; date headers show their recording counts.
+- Recording rows will prioritize phone number, time/duration, and playback. Deletion moves to a low-emphasis overflow action.
+- Full design: `docs/superpowers/specs/2026-07-27-recording-list-redesign-design.md`.
 
 ## Completed: settings screen replaces recording content
 
