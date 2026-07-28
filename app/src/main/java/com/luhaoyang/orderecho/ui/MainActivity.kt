@@ -130,8 +130,12 @@ class MainActivity : AppCompatActivity(), SettingsHost {
             adapter = this@MainActivity.adapter
         }
         content.findViewById<Button>(R.id.refresh).setOnClickListener { render(viewModel.refresh()) }
-        content.findViewById<EditText>(R.id.search_number).setOnEditorActionListener { view, _, _ ->
-            render(viewModel.setQuery(view.text.toString()))
+        fun submitSearch() {
+            render(viewModel.setQuery(content.findViewById<EditText>(R.id.search_number).text.toString()))
+        }
+        content.findViewById<Button>(R.id.search).setOnClickListener { submitSearch() }
+        content.findViewById<EditText>(R.id.search_number).setOnEditorActionListener { _, _, _ ->
+            submitSearch()
             true
         }
         content.findViewById<Button>(R.id.clear_search).setOnClickListener {

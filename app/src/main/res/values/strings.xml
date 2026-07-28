@@ -11,6 +11,7 @@
     <string name="recordings_load_error">读取录音失败，请稍后重试</string>
     <string name="unknown_number">未知号码</string>
     <string name="search_number_hint">搜索电话号码</string>
+    <string name="search">搜索</string>
     <string name="clear_search">清除搜索</string>
     <string name="refresh">刷新</string>
     <string name="retry">重试</string>

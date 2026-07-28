@@ -4,6 +4,13 @@
 
 Validate the approved Today-first recording-list redesign on the Huawei BAC-AL00 physical device.
 
+## Completed: explicit normalized phone search controls
+
+- Digit-only queries now use Task 1's normalized phone matching from both the keyboard action and a dedicated `搜索` button; separator-only input resets to the unfiltered list.
+- `刷新` now sits to the right of the `通话录音 · X 条` header and remains a full directory refresh without clearing the input; `搜索` sits to the right of the phone-number input and does not trigger a scan.
+- The new cache-fixture Espresso regression test compiles with the app and proves a digits-only query finds a number formatted with spaces. `:app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest` and `git diff --check` passed on 2026-07-28.
+- Run the instrumentation test and visually verify the two 48dp control rows, input retention on Refresh, and search behavior on the BAC-AL00; no Android device is attached in this environment.
+
 ## Completed: Today-first recording-list Task 2 UI
 
 - The recording screen now shows a compact `通话录音 · N 条` heading, with today's date expanded and older dates rendered as 48dp expandable headers carrying their recording counts.
