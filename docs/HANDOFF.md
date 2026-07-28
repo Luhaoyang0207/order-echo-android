@@ -2,7 +2,20 @@
 
 ## Current goal
 
-Validate the approved Today-first recording-list redesign on the Huawei BAC-AL00 physical device.
+Complete the asynchronous filesystem follow-up, then validate the approved first release on the Huawei BAC-AL00 physical device.
+
+## Completed: normalized-search final-review fix wave
+
+- All instrumentation classes that launch `MainActivity` now use a cache-only `MainActivityTestEnvironment` rule. It restores the complete `order_echo_settings` snapshot, the previous static recording-directory override, and fixture files after every test.
+- Returning from Settings now clears the retained search query to match the newly blank input; unit and Espresso regressions cover the behavior.
+- A null recording-directory enumeration now throws a read failure and reaches `RecordingListState.Error`, while empty directories and per-file skip/count behavior remain distinct.
+- Focused RED/GREEN evidence and the full verification contract are recorded in `.superpowers/sdd/2026-07-28-normalized-phone-search/final-fix-report.md`.
+- Implementation commit: `fdb9221`.
+
+## Unresolved architectural follow-up
+
+- Startup cleanup, refresh, Settings statistics, manual cleanup, and individual deletion still scan/delete synchronously on the UI thread.
+- Do not wrap only one call path in an ad-hoc thread. The minimum safe follow-up is a lifecycle-owned serialized filesystem executor, main-thread result delivery, stale-result suppression/cancellation, asynchronous Settings callbacks, and deterministic executor-based tests.
 
 ## Completed: explicit normalized phone search controls
 
