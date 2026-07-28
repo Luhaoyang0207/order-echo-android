@@ -33,13 +33,12 @@ class RecordingListViewModel(
     }
 
     fun setQuery(query: String): RecordingListState {
-        this.query = query.trim()
-        if (this.query.isNotEmpty()) {
-            expandedDates.clear()
-            expandedDates += allRecordings
-                .filter { it.phoneNumber.orEmpty().contains(this.query) }
-                .map { it.recordedAt.toLocalDate() }
-        }
+        this.query = normalizePhoneSearch(query)
+        if (this.query.isEmpty()) return clearQuery()
+        expandedDates.clear()
+        expandedDates += allRecordings
+            .filter { phoneNumberMatches(it.phoneNumber, this.query) }
+            .map { it.recordedAt.toLocalDate() }
         return displayedState()
     }
 
@@ -108,7 +107,7 @@ class RecordingListViewModel(
         if (allRecordings.isEmpty()) {
             return if (scanFailedCount > 0) RecordingListState.Error else RecordingListState.Empty
         }
-        val filtered = allRecordings.filter { it.phoneNumber.orEmpty().contains(query) }
+        val filtered = allRecordings.filter { phoneNumberMatches(it.phoneNumber, query) }
         return if (filtered.isEmpty()) {
             RecordingListState.NoMatches
         } else {
@@ -130,6 +129,12 @@ class RecordingListViewModel(
         }
     }
 }
+
+internal fun normalizePhoneSearch(value: String?): String =
+    value.orEmpty().filter { it in '0'..'9' }
+
+private fun phoneNumberMatches(phoneNumber: String?, normalizedQuery: String): Boolean =
+    normalizedQuery.isEmpty() || normalizePhoneSearch(phoneNumber).contains(normalizedQuery)
 
 data class CleanupRunResult(
     val listState: RecordingListState,

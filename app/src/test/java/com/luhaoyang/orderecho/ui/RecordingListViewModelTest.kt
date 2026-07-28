@@ -18,9 +18,9 @@ import org.junit.Test
 
 class RecordingListViewModelTest {
     private val baseDirectory = Files.createTempDirectory("recording-list").toFile()
-    private val recording = createRecording(LocalDate.now(), "4712345678")
-    private val yesterdayRecording = createRecording(LocalDate.now().minusDays(1), "4712345679")
-    private val olderRecording = createRecording(LocalDate.now().minusDays(7), "4712345680")
+    private val recording = createRecording(LocalDate.now(), "123 12 123")
+    private val yesterdayRecording = createRecording(LocalDate.now().minusDays(1), "+47 (123)-45 678")
+    private val olderRecording = createRecording(LocalDate.now().minusDays(7), "9187654320")
 
     @After
     fun tearDown() {
@@ -60,9 +60,37 @@ class RecordingListViewModelTest {
 
     @Test
     fun searchExpandsEveryDateThatContainsAMatch() {
-        val state = viewModel().apply { refresh() }.setQuery("471") as RecordingListState.Content
+        val state = viewModel().apply { refresh() }.setQuery("1") as RecordingListState.Content
 
         assertTrue(state.groups.flatMap { it.dates }.all { it.expanded })
+    }
+
+    @Test
+    fun digitsOnlyQueryMatchesANumberDisplayedWithSpaces() {
+        val state = viewModel().apply { refresh() }.setQuery("12312123") as RecordingListState.Content
+
+        assertEquals(listOf("123 12 123"), state.groups.flatMap { it.dates }
+            .flatMap { it.recordings }
+            .map { it.phoneNumber })
+    }
+
+    @Test
+    fun searchIgnoresCommonSeparatorsInTheQueryAndNumber() {
+        val state = viewModel().apply { refresh() }.setQuery("47-123 45") as RecordingListState.Content
+
+        assertEquals(listOf("+47 (123)-45 678"), state.groups.flatMap { it.dates }
+            .flatMap { it.recordings }
+            .map { it.phoneNumber })
+    }
+
+    @Test
+    fun separatorOnlyQueryRestoresAllRecordingsWithTodayFirstExpansion() {
+        val state = viewModel().apply { refresh() }.setQuery(" -() ") as RecordingListState.Content
+
+        val dates = state.groups.flatMap { it.dates }
+        assertEquals(3, dates.flatMap { it.recordings }.size)
+        assertTrue(dates.single { it.date == LocalDate.now() }.expanded)
+        assertFalse(dates.single { it.date == LocalDate.now().minusDays(1) }.expanded)
     }
 
     @Test
