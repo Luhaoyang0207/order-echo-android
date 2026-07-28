@@ -4,6 +4,10 @@
 
 Complete the asynchronous filesystem follow-up, then validate the approved first release on the Huawei BAC-AL00 physical device.
 
+## Completed: bilingual README
+
+- `README.md` now presents the app's purpose, capabilities, limits, privacy boundary, build/install commands, test safety, and known asynchronous filesystem follow-up in matched Simplified Chinese and English sections.
+
 ## Completed: normalized-search final-review fix wave
 
 - All instrumentation classes that launch `MainActivity` now use a cache-only `MainActivityTestEnvironment` rule. It restores the complete `order_echo_settings` snapshot, the previous static recording-directory override, and fixture files after every test.
