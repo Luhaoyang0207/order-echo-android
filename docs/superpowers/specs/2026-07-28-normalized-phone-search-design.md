@@ -15,6 +15,8 @@ For example, searching for `12312123` must find a recording displayed as `123 12
 - No recording file is renamed, moved, or otherwise modified.
 - The UI continues to display the original parsed phone number exactly as it appears in the Huawei recording filename.
 - Existing empty-search, no-match, date-expansion, playback, cleanup, and deletion behavior remains unchanged.
+- Move the Refresh action beside the `通话录音 · X 条` header.
+- Replace the current button beside the search field with an explicit `搜索` action.
 
 ## Matching rule
 
@@ -38,6 +40,8 @@ Add a small pure normalization helper alongside the recording-list ViewModel. It
 
 Search-result date expansion continues to be based on the filtered matching recordings. No repository scan, media metadata extraction, storage operation, or permission behavior changes.
 
+The recording header becomes a horizontal row: `通话录音 · X 条` on the left and `刷新` on the right. The next row remains the phone-number input, with `搜索` on its right. Tapping `搜索` and submitting from the phone keyboard both call the same query action. `刷新` remains a full recording-directory refresh and does not apply a new query.
+
 ## Error handling
 
 - A recording without a phone number never matches a non-empty normalized search.
@@ -49,4 +53,5 @@ Search-result date expansion continues to be based on the filtered matching reco
 - A unit test proves digits-only input matches a displayed number containing spaces.
 - A unit test proves common separators are ignored on both the query and stored number.
 - A unit test proves separator-only input restores the normal unfiltered list.
+- An instrumentation test confirms the recording screen exposes `刷新` beside the count header and `搜索` beside the input, and that the two actions retain their respective refresh/search behavior.
 - Run the focused ViewModel tests and the full unit-test/build command.
