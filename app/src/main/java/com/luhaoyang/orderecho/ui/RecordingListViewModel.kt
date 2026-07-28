@@ -49,6 +49,8 @@ class RecordingListViewModel(
         return displayedState()
     }
 
+    fun enterRecordingScreen(): RecordingListState = clearQuery()
+
     fun toggleDate(date: LocalDate): RecordingListState {
         if (!expandedDates.add(date)) expandedDates.remove(date)
         return displayedState()

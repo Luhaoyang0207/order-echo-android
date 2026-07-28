@@ -142,6 +142,7 @@ class MainActivity : AppCompatActivity(), SettingsHost {
             content.findViewById<EditText>(R.id.search_number).text.clear()
             render(viewModel.clearQuery())
         }
+        viewModel.enterRecordingScreen()
         render(viewModel.runCleanup().listState)
     }
 

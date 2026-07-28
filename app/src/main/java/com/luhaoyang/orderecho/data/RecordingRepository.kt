@@ -2,6 +2,7 @@ package com.luhaoyang.orderecho.data
 
 import com.luhaoyang.orderecho.model.RecordingFile
 import java.io.File
+import java.io.IOException
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -22,8 +23,10 @@ class RecordingRepository(
     fun scan(): RecordingScanResult {
         val recordings = mutableListOf<RecordingFile>()
         var failedCount = 0
+        val children = childrenProvider(baseDirectory)
+            ?: throw IOException("Unable to enumerate recording directory")
 
-        childrenProvider(baseDirectory)?.forEach { file ->
+        children.forEach { file ->
             try {
                 if (isSafeRecordingFile(file)) recordings += toRecordingFile(file)
             } catch (_: Exception) {

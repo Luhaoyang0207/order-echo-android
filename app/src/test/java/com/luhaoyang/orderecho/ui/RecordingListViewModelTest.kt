@@ -94,6 +94,16 @@ class RecordingListViewModelTest {
     }
 
     @Test
+    fun enteringANewRecordingScreenClearsTheRetainedSearch() {
+        val viewModel = viewModel().apply { refresh() }
+        viewModel.setQuery("12312123")
+
+        val state = viewModel.enterRecordingScreen() as RecordingListState.Content
+
+        assertEquals(3, state.groups.flatMap { it.dates }.flatMap { it.recordings }.size)
+    }
+
+    @Test
     fun tappingThePausedRecordingResumesInsteadOfRestartingIt() {
         val playback = FakePlayback(PlaybackState.Paused(recording.file, 2_000, 5_000))
         val viewModel = viewModel(playback = playback)
@@ -126,11 +136,22 @@ class RecordingListViewModelTest {
         assertEquals(CleanupResult(deletedCount = 2, failedCount = 1), run.cleanupResult)
     }
 
+    @Test
+    fun directoryEnumerationFailureReturnsTheReadErrorState() {
+        val repository = RecordingRepository(
+            baseDirectory = baseDirectory,
+            childrenProvider = { null }
+        )
+
+        assertEquals(RecordingListState.Error, viewModel(repository = repository).refresh())
+    }
+
     private fun viewModel(
+        repository: RecordingRepository = RecordingRepository(baseDirectory),
         playback: FakePlayback = FakePlayback(),
         cleanup: () -> CleanupResult = { CleanupResult(0, 0) }
     ) = RecordingListViewModel(
-        repository = RecordingRepository(baseDirectory),
+        repository = repository,
         grouper = RecordingGrouper(),
         playbackController = playback,
         cleanup = cleanup

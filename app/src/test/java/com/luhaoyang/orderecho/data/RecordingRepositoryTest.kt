@@ -8,6 +8,7 @@ import java.time.LocalDateTime
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -123,6 +124,18 @@ class RecordingRepositoryTest {
 
         assertEquals(listOf(good), result.recordings.map { it.file })
         assertEquals(1, result.failedCount)
+    }
+
+    @Test
+    fun nullDirectoryEnumerationThrowsInsteadOfReturningAnEmptyScan() {
+        val repository = RecordingRepository(
+            baseDirectory = baseDirectory,
+            childrenProvider = { null }
+        )
+
+        assertThrows(IOException::class.java) {
+            repository.scan()
+        }
     }
 
     @Test

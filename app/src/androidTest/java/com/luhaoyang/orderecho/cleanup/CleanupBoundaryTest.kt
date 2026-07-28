@@ -10,28 +10,18 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.luhaoyang.orderecho.data.AppSettings
 import com.luhaoyang.orderecho.data.RecordingRepository
 import com.luhaoyang.orderecho.ui.MainActivity
+import com.luhaoyang.orderecho.ui.MainActivityTestEnvironment
 import java.io.File
 import java.time.LocalDate
-import org.junit.After
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CleanupBoundaryTest {
-    private lateinit var testDirectory: File
-
-    @Before
-    fun setUp() {
-        testDirectory = File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir, "cleanup-test-${System.nanoTime()}")
-        testDirectory.mkdirs()
-    }
-
-    @After
-    fun tearDown() {
-        testDirectory.deleteRecursively()
-    }
+    @get:Rule
+    val activityEnvironment = MainActivityTestEnvironment("cleanup-boundary")
 
     @Test
     fun settingsShowExactlyFiveRetentionChoices() {
@@ -48,8 +38,8 @@ class CleanupBoundaryTest {
 
     @Test
     fun cleanupDoesNotDeleteOutsideCallrecord() {
-        val callrecordDirectory = File(testDirectory, "Callrecord").apply { mkdirs() }
-        val outsideFile = File(testDirectory, "outside_20260701_120000.amr").apply { writeText("amr") }
+        val callrecordDirectory = activityEnvironment.recordingDirectory
+        val outsideFile = File(activityEnvironment.testRoot, "outside_20260701_120000.amr").apply { writeText("amr") }
         val settings = AppSettings(InstrumentationRegistry.getInstrumentation().targetContext).also { it.setRetentionDays(7) }
 
         RetentionCleaner(RecordingRepository(callrecordDirectory), settings) { LocalDate.of(2026, 7, 26) }.clean()

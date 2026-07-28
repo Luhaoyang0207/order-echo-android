@@ -16,32 +16,22 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.luhaoyang.orderecho.R
 import java.io.File
 import java.time.LocalDate
-import org.junit.After
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class MainActivityNavigationTest {
-    private lateinit var testDirectory: File
+    @get:Rule
+    val activityEnvironment = MainActivityTestEnvironment("main-navigation")
 
-    @Before
-    fun setUp() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        testDirectory = File(context.cacheDir, "recording-list-${System.nanoTime()}").apply { mkdirs() }
-        File(testDirectory, "4712345678_${LocalDate.now().minusDays(1).toString().replace("-", "")}_141530.amr")
-            .writeText("amr")
-        MainActivity.recordingDirectoryForTesting = testDirectory
-    }
-
-    @After
-    fun tearDown() {
-        MainActivity.recordingDirectoryForTesting = null
-        testDirectory.deleteRecursively()
-    }
+    private val testDirectory: File
+        get() = activityEnvironment.recordingDirectory
 
     @Test
     fun settingsTabReplacesRecordingListInsteadOfOverlayingIt() {
+        File(testDirectory, "4712345678_${LocalDate.now().minusDays(1).toString().replace("-", "")}_141530.amr")
+            .writeText("amr")
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val packageName = instrumentation.targetContext.packageName
         instrumentation.uiAutomation.executeShellCommand(
@@ -61,6 +51,8 @@ class MainActivityNavigationTest {
 
     @Test
     fun olderDateHeaderTogglesItsRecordingRows() {
+        File(testDirectory, "4712345678_${LocalDate.now().minusDays(1).toString().replace("-", "")}_141530.amr")
+            .writeText("amr")
         grantStoragePermissions()
 
         ActivityScenario.launch(MainActivity::class.java).use {
@@ -86,6 +78,27 @@ class MainActivityNavigationTest {
             onView(withId(R.id.search)).perform(click())
 
             onView(withText("123 12 123")).check(matches(isDisplayed()))
+        }
+    }
+
+    @Test
+    fun returningFromSettingsClearsTheInvisibleSearchFilter() {
+        File(testDirectory, "123 12 123_${LocalDate.now().toString().replace("-", "")}_141530.amr")
+            .writeText("amr")
+        File(testDirectory, "9187654320_${LocalDate.now().toString().replace("-", "")}_151530.amr")
+            .writeText("amr")
+        grantStoragePermissions()
+
+        ActivityScenario.launch(MainActivity::class.java).use {
+            onView(withId(R.id.search_number)).perform(typeText("12312123"), closeSoftKeyboard())
+            onView(withId(R.id.search)).perform(click())
+            onView(withText("9187654320")).check(doesNotExist())
+
+            onView(withId(R.id.settings_tab)).perform(click())
+            onView(withId(R.id.recordings_tab)).perform(click())
+
+            onView(withId(R.id.search_number)).check(matches(withText("")))
+            onView(withText("9187654320")).check(matches(isDisplayed()))
         }
     }
 
