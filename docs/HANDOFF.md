@@ -2,7 +2,16 @@
 
 ## Current goal
 
-Complete the asynchronous filesystem follow-up, then validate the approved first release on the Huawei BAC-AL00 physical device.
+Implement the requested first-incoming-call overlay using only Android system Call Log, then validate on Huawei BAC-AL00 / Android 8. The earlier asynchronous recording filesystem follow-up remains separate.
+
+## 2026-09-17 — First-call rules checkpoint
+
+- Inspected Kotlin/XML app, SDK 26/28/34 configuration, Activity, Settings, permissions, boot receiver, cleanup and recording code.
+- Added caller identity, lazy incoming-history filtering and call-session rules in `calls/`, with unit tests. Design and plan are under `docs/superpowers/`.
+- Baseline tests/build passed. New tests first failed on absent classes, then passed with `:app:testDebugUnitTest :app:assembleDebug` (JBR 17).
+- No number persistence or new dependency. Five-second first-ring cutoff excludes contemporaneous rows; public APIs cannot prove absence of unbounded OEM delay.
+- Next: receiver/service, Android query, overlay and Settings permissions.
+- Existing untracked `dist/` APKs belong to the starting workspace and remain untouched.
 
 ## Completed: bilingual README
 
