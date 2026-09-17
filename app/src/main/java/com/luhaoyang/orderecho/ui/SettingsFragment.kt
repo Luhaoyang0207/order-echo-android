@@ -1,5 +1,11 @@
 package com.luhaoyang.orderecho.ui
 
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.activity.result.contract.ActivityResultContracts
+import com.luhaoyang.orderecho.calls.FirstCallPermissions
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -16,6 +22,9 @@ import java.util.Date
 import java.util.Locale
 
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
+    private val requestCallPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        refreshCallPermissions()
+    }
     private lateinit var settings: AppSettings
     private lateinit var retentionChoices: RadioGroup
     private lateinit var status: TextView
@@ -31,12 +40,59 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             refreshStatus()
         }
         view.findViewById<Button>(R.id.run_cleanup).setOnClickListener { confirmCleanup() }
+        view.findViewById<Button>(R.id.grant_call_permissions).setOnClickListener {
+            requestCallPermissions.launch(FirstCallPermissions.runtime.filter {
+                !FirstCallPermissions.granted(requireContext(), it)
+            }.toTypedArray())
+        }
+        view.findViewById<Button>(R.id.grant_overlay_permission).setOnClickListener {
+            openPermissionSettings(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+        }
+        view.findViewById<Button>(R.id.first_call_app_settings).setOnClickListener {
+            openPermissionSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        }
         refreshStatus()
+        refreshCallPermissions()
     }
 
     override fun onResume() {
         super.onResume()
-        if (::status.isInitialized) refreshStatus()
+        if (view != null) {
+            refreshStatus()
+            refreshCallPermissions()
+        }
+    }
+
+    private fun refreshCallPermissions() {
+        val root = view ?: return
+        val context = requireContext()
+        fun state(granted: Boolean) = getString(if (granted) R.string.permission_granted else R.string.permission_missing)
+        root.findViewById<TextView>(R.id.first_call_permission_status).text = getString(
+            R.string.first_call_permission_status,
+            state(FirstCallPermissions.granted(context, Manifest.permission.READ_PHONE_STATE)),
+            state(FirstCallPermissions.granted(context, Manifest.permission.READ_CALL_LOG)),
+            state(Settings.canDrawOverlays(context))
+        )
+        root.findViewById<Button>(R.id.grant_call_permissions).isEnabled = !FirstCallPermissions.hasRuntime(context)
+        root.findViewById<Button>(R.id.grant_overlay_permission).isEnabled = !Settings.canDrawOverlays(context)
+        root.findViewById<Button>(R.id.first_call_app_settings).visibility =
+            if (FirstCallPermissions.ready(context)) View.GONE else View.VISIBLE
+        root.findViewById<Button>(R.id.run_cleanup).isEnabled = MainActivity.STORAGE_PERMISSIONS.all {
+            FirstCallPermissions.granted(context, it)
+        }
+    }
+
+    private fun openPermissionSettings(action: String) {
+        val uri = Uri.fromParts("package", requireContext().packageName, null)
+        try {
+            startActivity(Intent(action, uri))
+        } catch (_: RuntimeException) {
+            try {
+                startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, uri))
+            } catch (_: RuntimeException) {
+                Toast.makeText(requireContext(), R.string.first_call_settings_unavailable, Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun confirmCleanup() {

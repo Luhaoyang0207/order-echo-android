@@ -59,11 +59,14 @@ class MainActivity : AppCompatActivity(), SettingsHost {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == STORAGE_PERMISSION_REQUEST && hasStoragePermission()) showRecordingList() else showPermissionRequired()
+        if (requestCode == STORAGE_PERMISSION_REQUEST && !showingSettings) {
+            if (hasStoragePermission()) showRecordingList() else showPermissionRequired()
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        if (hasStoragePermission() && showingSettings) initializeRecordings()
         if (hasStoragePermission() && !showingSettings) {
             if (::viewModel.isInitialized) render(viewModel.refresh()) else showRecordingList()
         }
@@ -96,21 +99,11 @@ class MainActivity : AppCompatActivity(), SettingsHost {
         supportFragmentManager.findFragmentById(R.id.content)?.let {
             supportFragmentManager.beginTransaction().remove(it).commitNow()
         }
-        if (!::viewModel.isInitialized) {
-            CleanupStartup().initialize(applicationContext)
-            val repository = RecordingRepository(
-                baseDirectory = recordingDirectoryForTesting ?: File("/storage/emulated/0/Sounds/Callrecord/"),
-                durationReader = RecordingDurationReader()::read
-            )
-            val settings = AppSettings(applicationContext)
-            val retentionCleaner = RetentionCleaner(repository, settings)
-            viewModel = RecordingListViewModel(
-                repository,
-                RecordingGrouper(),
-                PlaybackController(repository),
-                retentionCleaner::clean
-            )
+        if (!hasStoragePermission()) {
+            showPermissionRequired()
+            return
         }
+        initializeRecordings()
         content.removeAllViews()
         LayoutInflater.from(this).inflate(R.layout.fragment_recording_list, content, true)
         adapter = RecordingListAdapter(
@@ -146,11 +139,28 @@ class MainActivity : AppCompatActivity(), SettingsHost {
         render(viewModel.runCleanup().listState)
     }
 
+    private fun initializeRecordings() {
+        if (!::viewModel.isInitialized) {
+            CleanupStartup().initialize(applicationContext)
+            val repository = RecordingRepository(
+                baseDirectory = recordingDirectoryForTesting ?: File("/storage/emulated/0/Sounds/Callrecord/"),
+                durationReader = RecordingDurationReader()::read
+            )
+            val settings = AppSettings(applicationContext)
+            val retentionCleaner = RetentionCleaner(repository, settings)
+            viewModel = RecordingListViewModel(
+                repository,
+                RecordingGrouper(),
+                PlaybackController(repository),
+                retentionCleaner::clean
+            )
+        }
+    }
+
     private fun showSettings() {
-        if (!::viewModel.isInitialized) return
         showingSettings = true
         progressHandler.removeCallbacks(progressRefresh)
-        viewModel.release()
+        if (::viewModel.isInitialized) viewModel.release()
         content.removeAllViews()
         supportFragmentManager.beginTransaction()
             .replace(R.id.content, SettingsFragment())
@@ -166,9 +176,12 @@ class MainActivity : AppCompatActivity(), SettingsHost {
             .show()
     }
 
-    override fun recordingStatistics(): RecordingStatistics = viewModel.recordingStatistics()
+    override fun recordingStatistics(): RecordingStatistics =
+        if (::viewModel.isInitialized && hasStoragePermission()) viewModel.recordingStatistics()
+        else RecordingStatistics(0, 0L, null)
 
     override fun runCleanupFromSettings(): CleanupResult? {
+        if (!::viewModel.isInitialized || !hasStoragePermission()) return null
         val run = viewModel.runCleanup()
         return run.cleanupResult
     }

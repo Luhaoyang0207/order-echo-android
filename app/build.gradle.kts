@@ -18,6 +18,11 @@ android {
         buildConfigField("int", "MIN_SDK_FOR_TEST", "26")
     }
 
+    lint {
+        // Internal APK for the restaurant's Android 8 phone, not a Google Play release.
+        disable += "ExpiredTargetSdkVersion"
+    }
+
     buildFeatures {
         buildConfig = true
     }

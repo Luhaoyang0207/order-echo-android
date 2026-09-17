@@ -28,7 +28,7 @@ class MainActivityPermissionTest {
         instrumentation.uiAutomation.executeShellCommand("pm revoke $packageName android.permission.READ_EXTERNAL_STORAGE").close()
         instrumentation.uiAutomation.executeShellCommand("pm revoke $packageName android.permission.WRITE_EXTERNAL_STORAGE").close()
 
-        ActivityScenario.launch(MainActivity::class.java).use {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             val device = UiDevice.getInstance(instrumentation)
             val denyButton = device.wait(
                 Until.findObject(By.res(PACKAGE_INSTALLER, DENY_BUTTON)),
@@ -44,6 +44,21 @@ class MainActivityPermissionTest {
             denyButton!!.click()
             onView(withText("需要存储权限")).check(matches(isDisplayed()))
             onView(withText("打开系统设置")).check(matches(isDisplayed()))
+            onView(withText("设置")).perform(androidx.test.espresso.action.ViewActions.click())
+            onView(androidx.test.espresso.matcher.ViewMatchers.withId(com.luhaoyang.orderecho.R.id.first_call_permission_status))
+                .check(matches(isDisplayed()))
+            onView(withText("录音")).perform(androidx.test.espresso.action.ViewActions.click())
+            onView(withText("需要存储权限")).check(matches(isDisplayed()))
+            // Granting storage while Settings is open must also prepare existing cleanup.
+            onView(withText("设置")).perform(androidx.test.espresso.action.ViewActions.click())
+            scenario.moveToState(androidx.lifecycle.Lifecycle.State.STARTED)
+            MainActivity.STORAGE_PERMISSIONS.forEach { permission ->
+                android.os.ParcelFileDescriptor.AutoCloseInputStream(
+                    instrumentation.uiAutomation.executeShellCommand("pm grant $packageName $permission")
+                ).use { it.readBytes() }
+            }
+            scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
+            scenario.onActivity { activity -> assertNotNull(activity.runCleanupFromSettings()) }
         }
     }
 

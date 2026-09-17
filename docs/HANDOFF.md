@@ -2,7 +2,39 @@
 
 ## Current goal
 
-Implement the requested first-incoming-call overlay using only Android system Call Log, then validate on Huawei BAC-AL00 / Android 8. The earlier asynchronous recording filesystem follow-up remains separate.
+First-incoming-call identification is implemented and verified on an Android 8 / API 26 emulator. Next: install the APK on Huawei BAC-AL00 and complete the physical EMUI acceptance in `docs/FIRST_CALL_TESTING.md`. The earlier asynchronous recording filesystem follow-up remains separate.
+
+## 2026-09-17 — Completed first incoming caller overlay
+
+### Changes and decisions
+
+- Added manifest PHONE_STATE receiver, short non-exported foreground service, cancellable worker Call Log query, Norway full-number identity and in-memory session deduplication.
+- Added application-context, non-touchable/non-focusable `第一次来电` overlay. Screenshot review moved it below the dialer's number while keeping it in the upper screen. OFFHOOK/IDLE, 12-second display timeout, 15-second service deadline and service destruction remove it.
+- Settings exposes Phone, Call Log and Overlay status/authorization/recovery. Storage denial no longer prevents Settings access. Unrelated permission callbacks preserve Settings; restoring storage there initializes the existing recording dependencies.
+- No numbers are persisted; no database, dependency, INTERNET permission or call control was added. Existing WorkManager transitively contributes WAKE_LOCK/ACCESS_NETWORK_STATE as before; there is still no INTERNET permission in the merged manifest.
+- Independent review found a queued-service race. Replaced unconditional stopSelf with stopSelfResult(latestStartId); stale starts preserve current work. An API26 real-service regression passes with the fix and fails when temporarily mutated back to stopSelf. The mutation was restored and the correct APK rebuilt. Follow-up review found no remaining important issue in these paths.
+- Additional declared permissions: READ_PHONE_STATE, READ_CALL_LOG, SYSTEM_ALERT_WINDOW, FOREGROUND_SERVICE. Existing storage/boot permissions remain. SDKs stay 26/28/34; only lint's Google Play ExpiredTargetSdkVersion check is excluded for this internal APK.
+
+### Files
+
+- Production: `calls/{CallNumber,AndroidCallNumber,CallHistory,CallHistoryChecker,IncomingCallSession,IncomingCallReceiver,IncomingCallService,FirstCallOverlayManager,FirstCallPermissions}.kt`.
+- Integration: `app/src/main/AndroidManifest.xml`, `ui/MainActivity.kt`, `ui/SettingsFragment.kt`, `res/layout/fragment_settings.xml`, `res/values/strings.xml`, `app/build.gradle.kts`.
+- Tests: three unit classes in `src/test/.../calls/`; three Android classes in `src/androidTest/.../calls/`; `FirstCallSettingsTest.kt`; expanded `MainActivityPermissionTest.kt`.
+- Memory: AGENTS, README, ARCHITECTURE, DECISIONS, this handoff, FIRST_CALL_TESTING, and the 2026-09-17 spec/plan. Detailed per-file responsibilities are in FIRST_CALL_TESTING.
+
+### Verification
+
+- Final `:app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug` passed with JBR 17. Unit tests: 61, zero failures/errors. Lint: zero errors; 20 existing warnings in unchanged recording UI/dependency recommendations.
+- API26 instrumentation: 13 ordinary tests + 1 permission-denial/recovery test + 1 opt-in queued-service race test, all passed. Overlay tests had real SYSTEM_ALERT_WINDOW approval, not skipped.
+- Permission test runs separately after adb revokes storage, because revoking a granted runtime permission inside a running instrumentation process can kill that process. The service race test runs separately during an emulator-generated call with `-e testEmulatedCall true`; never opt it in on the restaurant phone.
+- API37's four cursor/normalization tests passed, but full UI tests were incompatible with the existing Espresso version (InputManager.getInstance removed). A dedicated API26 AOSP image was downloaded from Google, SHA1-checked, and used instead without changing app dependencies.
+- Actual API26 GSM emulation from the background with screen asleep showed the hint over the system incoming call screen. Answering removed it (no type-2038 window); calling again found prior incoming history and showed no overlay.
+- Evidence in ignored `app/build/`: `first-call-final-build.log`, `api26-main-tests.log`, `api26-permission-tests.log`, `api26-service-tests.log`, `service-race-red-test.log`, `api26-first-call.png`. Emulator image/AVD also stay only under app/build; existing user AVD data and dist APKs were not changed.
+- Debug APK: `app/build/outputs/apk/debug/app-debug.apk` (about 3.8 MB), SHA256 `4BB6C3C6062A94B405BF8303B98F7B76E471457E58051E89F24163C69891BA42`.
+
+### Remaining limits / next task
+
+No physical Huawei is attached. Complete all 17 manual scenarios, especially EMUI auto/background launch, reboot after unlock, locked dialer, simultaneous SIM/call waiting and fast redial. Android exposes no exact shared call ID/ring-start timestamp: the five-second cutoff cannot guarantee unbounded OEM delays or incorrect clocks. Deleted or not-yet-written system history can change classification. These limits are explicit in the acceptance document.
 
 ## 2026-09-17 — First-call rules checkpoint
 

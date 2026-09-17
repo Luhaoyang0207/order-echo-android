@@ -50,4 +50,16 @@
     <string name="collapse_date">▼</string>
     <string name="expand_or_collapse_date">展开或收起日期录音</string>
     <string name="more">更多</string>
+    <string name="first_call_label">第一次来电</string>
+    <string name="first_call_title">首次来电识别</string>
+    <string name="first_call_notification">正在处理来电提示，完成后自动关闭</string>
+    <string name="first_call_permissions_explanation">首次来电识别需要电话、通话记录和悬浮窗权限。</string>
+    <string name="first_call_permission_status">电话：%1$s\n通话记录：%2$s\n悬浮窗：%3$s</string>
+    <string name="permission_granted">已允许</string>
+    <string name="permission_missing">未允许</string>
+    <string name="grant_call_permissions">允许电话和通话记录权限</string>
+    <string name="grant_overlay_permission">允许显示在其他应用上层</string>
+    <string name="first_call_open_app_settings">授权失败？打开应用权限设置</string>
+    <string name="first_call_huawei_help">华为手机还需在“手机管家 / 电池 / 应用启动管理”中允许自动启动、关联启动和后台运行，并在电池优化中允许本应用不受限制。菜单名称可能不同。首次安装后请打开一次 App 完成授权。</string>
+    <string name="first_call_settings_unavailable">无法打开此设置页面，请在系统设置中手动授权。</string>
 </resources>
