@@ -46,12 +46,12 @@ Recording directory:
 
 ## 不包含的功能 / Out of scope
 
-- 不录制电话、不监听通话状态，也不干涉华为电话应用。
+- 不录制、接听、拒接或控制电话，不替换华为电话应用。仅为首次来电提示只读监听来电状态。
 - 不上传、同步或分享录音。
 - 不要求 Root。
 - 不移动或重命名录音文件。
 
-- It does not record calls, observe call state, or interfere with Huawei's Phone app.
+- It does not record, answer, reject, or control calls or replace Huawei's Phone app. Read-only call-state observation is used solely for the first-caller hint.
 - It does not upload, sync, or share recordings.
 - It does not require root access.
 - It does not move or rename recording files.
@@ -116,3 +116,23 @@ The current version scans files on the main thread during startup cleanup, refre
 - [架构 / Architecture](docs/ARCHITECTURE.md)
 - [技术决定 / Decisions](docs/DECISIONS.md)
 - [AI 协作说明 / AI agent instructions](AGENTS.md)
+
+## 首次来电识别 / First incoming caller hint
+
+系统历史通话中没有该号码以前的接听、未接、拒接或拦截来电时，响铃期间在屏幕顶部显示「第一次来电」。拨出记录不算历史来电。唯一来源是本机系统 Call Log，没有客户数据库、号码持久化、联系人查询或网络。
+
+When the local system Call Log contains no earlier incoming, missed, rejected or blocked call from a number, a small `第一次来电` hint appears near the top while ringing. Outgoing-only history does not count. There is no customer database, stored phone-number list, contact lookup or network access.
+
+首次安装后打开 App，在「设置」允许电话、通话记录与「显示在其他应用上层」权限；华为 EMUI 8 还需允许自启动、关联启动、后台运行，并放宽本应用的电池优化。普通重启解锁后不要求再次打开 App；手动强行停止后需要打开一次。
+
+After first installation, open Settings in the app and grant Phone, Call Log and Display over other apps. On EMUI 8, allow auto-launch, secondary launch and background execution, and exempt the app from restrictive battery optimization. Ordinary reboot after unlocking should not require reopening; a manually force-stopped app must be opened once.
+
+来电处理使用短时前台服务，会出现一条无号码的系统工作通知；完成后自动关闭。悬浮窗不接收触摸、不抢焦点，接听或挂断时移除，显示最多 12 秒。旧号码不会显示首次悬浮提示。
+
+A short-lived foreground service shows the required generic system notification during processing. The overlay is non-touchable and non-focusable, disappears on answer/end, and lasts at most 12 seconds. Returning callers do not get the first-caller overlay.
+
+按第一条 RINGING 的接收时间减 5 秒查询历史，重复事件不移动边界。挪威八位本地、`+47` 和 `0047` 格式可匹配。权限或查询异常、未知号码不显示。由于系统不提供精确通话 ID/开始时间，异常广播延迟、五秒内快速重拨、未落库记录及系统历史删除有明确限制。锁屏、EMUI 杀后台和双卡/通话等待须真机验证，不承诺突破系统限制。
+
+History uses the first RINGING receipt time minus five seconds; duplicates cannot move the boundary. Norwegian local eight-digit, `+47` and `0047` forms match. Unknown numbers and permission/query failures produce no hint. Public APIs expose no shared call ID/exact start timestamp, so OEM delays, very fast redials, delayed Call Log writes and deleted history have documented limits. Verify lock-screen display and EMUI background behavior on the physical phone.
+
+完整配置、限制和真机测试步骤见 [首次来电验收清单 / First-call acceptance](docs/FIRST_CALL_TESTING.md)。

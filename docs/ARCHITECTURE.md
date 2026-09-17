@@ -55,3 +55,34 @@ The retention setting offers 7, 30, 60, 90, and 180 days; it defaults to 30. Cle
 - Playback failure: show an error for that recording and release player resources.
 - Deletion failure: retain the file, report the failure, and continue cleaning other eligible files.
 
+
+## First incoming call hint (2026-09-17)
+
+Independent `calls/` components observe protected manifest PHONE_STATE broadcasts.
+`IncomingCallReceiver` records the first ringing receipt time and updates the
+main-thread-only `IncomingCallSession`. One canonical number and generation token
+live in memory until the call ends; no number is persisted.
+
+The receiver starts non-exported `IncomingCallService` only for the first usable
+number. The service immediately enters the foreground, then runs
+`CallHistoryChecker` on a serialized executor with CancellationSignal. SQL filters
+incoming/missed/rejected/blocked records older than the fixed cutoff, reads only
+NUMBER/DATE/TYPE, and closes its lazy cursor on match, exhaustion or failure.
+`AndroidCallNumber` combines PhoneNumberUtils with the Norwegian complete-number
+rule in `CallNumber`; recording substring search is deliberately independent.
+
+FIRST/PREVIOUS/UNKNOWN distinguishes absence of earlier inbound calls from query
+failure. Before FIRST displays, the service rechecks session token, runtime/overlay
+permissions and live RINGING state. OFFHOOK/IDLE synchronously invalidates results.
+Conditional `stopSelfResult(startId)` preserves newer queued service starts.
+
+`FirstCallOverlayManager` owns one application-context TYPE_APPLICATION_OVERLAY
+window with no input focus or touch handling. Receiver state changes, 500ms state
+checks, a 12-second overlay timeout, a 15-second total service deadline and service
+destruction all remove it. Cancellation never changes Huawei call state.
+
+SettingsFragment provides runtime permission requests and package-scoped overlay
+settings/recovery. MainActivity routes only its own storage permission callback;
+Settings can be entered even if storage was denied. The original boot receiver is
+unchanged: it still only schedules recording cleanup. Manifest PHONE_STATE receipt
+provides first-call background entry after reboot/unlock, subject to EMUI controls.

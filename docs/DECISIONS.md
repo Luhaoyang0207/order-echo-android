@@ -1,5 +1,29 @@
 # Decisions
 
+## 2026-09-17 — Read-only first incoming caller hint
+
+The user explicitly expanded scope to observe PHONE_STATE and read system Call Log
+for a first-incoming-call overlay on Huawei BAC-AL00 / Android 8. This supersedes
+older no-call-state wording. No call recording/control, dialer replacement,
+contacts, database, number persistence or network is introduced.
+
+Use a manifest receiver (Android 8 broadcast exception), in-memory deduplicated
+session and short foreground service with its required generic notification.
+Avoid permanent services, Application changes and additional boot work. The
+service uses conditional stopSelfResult so an old call cannot stop a newer queued
+start. It owns cancellable worker queries and an application-context non-touchable
+overlay; Activity lifetime cannot leak the window.
+
+Count only incoming/missed/rejected/blocked rows before first-ring receipt minus
+5000ms. Treat provider failure as UNKNOWN, not FIRST. Exact canonical Norway/E164
+identity is separate from recording search substrings. Android provides no shared
+call ID/exact ring timestamp, so unbounded vendor delay cannot be excluded with a
+mathematical guarantee; document the margin, rapid-redial and deleted-history limits.
+
+Keep minSdk 26, targetSdk 28, compileSdk 34 and existing dependencies. Suppress only
+lint's ExpiredTargetSdkVersion because this is internal APK distribution, not a
+Google Play release; keep all other lint checks active.
+
 ## 2026-07-27 — Replace direct views before showing a Fragment screen
 
 The recording list is inflated directly into the activity's content container, while Settings is a Fragment. Before adding or replacing the Settings Fragment, the activity must remove direct child views from that container; otherwise the Fragment is drawn over the recording interface instead of replacing it.
