@@ -4,6 +4,13 @@
 
 Investigate missing first-caller hint on Huawei BAC-AL00. The user confirmed three permissions, EMUI launch management and removal of the test number history, but sees no hint even after opening the app before calling. USB is unavailable. Diagnostic APK D1 is ready for the user to install and return the in-app report; the actual Huawei root cause is still unknown. Recording filesystem follow-up remains separate.
 
+## 2026-09-18 — D1 physical-device evidence
+
+- User confirms the ordinary-screen test overlay is visible on Huawei.
+- The next photo shows D1 with only the cleared-diagnostics marker (20:39:49), with no RINGING, OFFHOOK or IDLE entries visible. This narrows investigation to event receipt or stale report display, not yet to a proven OEM cause.
+- Important: D1 builds the report text once when the dialog opens; it does not refresh while open or when returning from the dialer. Asked whether the user reopened it after the call. First close with OK and reopen View diagnostics without clearing or making another call. This answer is still pending.
+- Verified source manifest declares the correct PHONE_STATE action and exported receiver. Android documentation still lists PHONE_STATE among Android 8 implicit-broadcast exceptions. No code change or root-cause claim based solely on this photo.
+- Next: inspect the freshly reopened report. If still only CLEARED, investigate event delivery with a bounded explicit listener probe; if it contains steps, follow the first failed gate. Avoid replacing the receiver based on a potentially stale dialog.
 ## 2026-09-18 — No-USB first-call diagnostics D1
 
 - Added debug-only Settings buttons: test a distinctly labelled overlay, view a scrollable diagnostic report, and clear only diagnostic records. Test window disappears on Settings onStop or its existing 12-second timeout.
