@@ -2,8 +2,20 @@
 
 ## Current goal
 
-First-incoming-call identification is implemented and verified on an Android 8 / API 26 emulator. Next: install the APK on Huawei BAC-AL00 and complete the physical EMUI acceptance in `docs/FIRST_CALL_TESTING.md`. The earlier asynchronous recording filesystem follow-up remains separate.
+Investigate missing first-caller hint on Huawei BAC-AL00. The user confirmed three permissions, EMUI launch management and removal of the test number history, but sees no hint even after opening the app before calling. USB is unavailable. Diagnostic APK D1 is ready for the user to install and return the in-app report; the actual Huawei root cause is still unknown. Recording filesystem follow-up remains separate.
 
+## 2026-09-18 — No-USB first-call diagnostics D1
+
+- Added debug-only Settings buttons: test a distinctly labelled overlay, view a scrollable diagnostic report, and clear only diagnostic records. Test window disappears on Settings onStop or its existing 12-second timeout.
+- Added local bounded 32-event trace at receiver, permission/number/session gates, service startup, live-state checks, history results and overlay acceptance/failure/removal/timeout. Fixed enum event names and timestamps only; no caller numbers, raw Intents, query rows or exception messages. Async writes are best effort. Release builds neither collect nor expose diagnostics.
+- Identification rules and all telephony/recording permissions remain unchanged. Window creation success explicitly does not claim visual visibility on EMUI. This is evidence gathering, not a claimed Huawei fix.
+- Files: new `calls/CallDiagnostics.kt` and Android `CallDiagnosticsTest.kt`; receiver/service/overlay manager; SettingsFragment, settings layout/strings and FirstCallSettingsTest; DECISIONS, FIRST_CALL_TESTING and this HANDOFF.
+- Validation: 61 unit tests passed; app/test APK builds and lint passed (zero errors, 20 existing warnings). Six API26 device tests passed: diagnostic privacy/bounding/clear, permission-gate trace, Settings report/overlay lifecycle and existing overlay tests. A separate reviewer found no blockers; addressed their missing overlay-timeout event.
+- Testing found and fixed Context-created preference access in diagnostics. System overlay intentionally excludes accessibility, so its UI lifecycle test inspects actual type-2038 windows rather than requiring accessibility text.
+- Manual AOSP API26 GSM call produced RINGING → service → query FIRST → overlay accepted → 12-second timeout → IDLE. Force-stop/reopen retained and displayed the report; visually checked its screenshot. This verifies ordinary persisted evidence, not durability of the last async write during an abrupt kill.
+- Evidence in ignored `app/build`: `diagnostics-build.log`, `diagnostics-device-tests.log`, `diagnostics-report.png`; initial missing-class red build in `diagnostics-red.log`.
+- Delivery APK: `app/build/outputs/apk/debug/OrderEcho-first-call-diagnostics-D1.apk` (same bytes as app-debug.apk). SHA256: `E0598A318541F073CEDA73B2315EF106A3A4BCFBED54633BB9C38BFFD2C3A67F`.
+- Next: user covers existing install with D1, checks test overlay visibility, clears diagnostic events, makes a test call, then returns the report screenshot. Do not repeat generic permission instructions or guess a dual-SIM/OEM fix without evidence. Existing untracked dist APKs remain untouched.
 ## 2026-09-18 — Publication branch
 
 - The user selected `feat/first-incoming-call` for uploading the completed feature to this project's existing `origin`.

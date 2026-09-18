@@ -1,5 +1,23 @@
 # Decisions
 
+## 2026-09-18 — Local debug diagnostics for Huawei acceptance
+
+The physical phone shows no hint even after the user confirmed all three permissions,
+EMUI launch management, removal of the test number's system history and a foreground
+app test. No USB connection is available. The root cause remains unverified.
+
+Keep identification rules unchanged while gathering evidence. Debug builds retain
+at most 32 timestamped, fixed-enum processing events in a separate private preferences
+file. Never store caller numbers, Intent contents, Call Log rows or exception text.
+Writes are asynchronous and best effort; an abrupt kill can lose the latest events.
+Release builds do not collect events or expose diagnostic controls.
+
+Settings offers a distinctly labelled overlay test, removed on timeout or leaving
+the screen, plus a scrollable report and diagnostic-only clear action. A successful
+WindowManager.addView is reported as system acceptance, not proof that EMUI displayed
+it over the dialer. The ordinary-screen test does not establish locked-dialer support.
+
+
 ## 2026-09-17 — Read-only first incoming caller hint
 
 The user explicitly expanded scope to observe PHONE_STATE and read system Call Log

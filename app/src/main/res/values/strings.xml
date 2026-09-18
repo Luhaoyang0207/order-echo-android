@@ -62,4 +62,11 @@
     <string name="first_call_open_app_settings">授权失败？打开应用权限设置</string>
     <string name="first_call_huawei_help">华为手机还需在“手机管家 / 电池 / 应用启动管理”中允许自动启动、关联启动和后台运行，并在电池优化中允许本应用不受限制。菜单名称可能不同。首次安装后请打开一次 App 完成授权。</string>
     <string name="first_call_settings_unavailable">无法打开此设置页面，请在系统设置中手动授权。</string>
+    <string name="first_call_test_overlay">测试悬浮窗</string>
+    <string name="first_call_test_label">悬浮窗测试</string>
+    <string name="first_call_test_failed">测试悬浮窗添加失败，请查看来电诊断。</string>
+    <string name="first_call_diagnostics_title">查看来电诊断</string>
+    <string name="first_call_diagnostics_description">诊断版 D1 · 仅保留本机最近 32 条处理步骤，不记录号码。\n悬浮窗测试仅验证普通界面的显示；来电界面仍需实际测试。\n如需重新测试，先清空诊断，来电结束后再查看本页。</string>
+    <string name="first_call_diagnostics_clear">清空诊断记录</string>
+    <string name="first_call_diagnostics_retry">已清空诊断。请测试一次来电，结束后返回查看来电诊断。</string>
 </resources>

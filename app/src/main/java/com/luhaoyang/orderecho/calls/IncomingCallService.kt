@@ -27,11 +27,11 @@ class IncomingCallService : Service() {
     private var query: Future<*>? = null
     private var destroyed = false
     private var latestStartId = 0
-    private val deadline = Runnable { finishCall() }
+    private val deadline = Runnable { record(CallDiagnosticEvent.DEADLINE); finishCall() }
     private val checkState = object : Runnable {
         override fun run() {
             if (request == null) return
-            if (!isStillRinging() || !FirstCallPermissions.ready(this@IncomingCallService)) {
+            if (!isStillRinging() || !permissionsReady()) {
                 finishCall()
             } else {
                 handler.postDelayed(this, 500L)
@@ -42,7 +42,11 @@ class IncomingCallService : Service() {
     override fun onCreate() {
         super.onCreate()
         IncomingCalls.service = this
-        overlay = FirstCallOverlayManager(applicationContext, ::finishCall)
+        record(CallDiagnosticEvent.SERVICE_CREATED)
+        overlay = FirstCallOverlayManager(applicationContext) {
+            record(CallDiagnosticEvent.OVERLAY_TIMEOUT)
+            finishCall()
+        }
         showServiceNotification()
     }
 
@@ -54,8 +58,10 @@ class IncomingCallService : Service() {
             val number = it.getStringExtra(NUMBER) ?: return@let null
             CallLookup(it.getLongExtra(TOKEN, -1), number, it.getLongExtra(BEFORE, 0))
         }
-        if (incoming == null || !IncomingCalls.session.isCurrent(incoming) ||
-            !FirstCallPermissions.ready(this) || !isStillRinging()) {
+        val validRequest = incoming != null && IncomingCalls.session.isCurrent(incoming)
+        if (!validRequest) record(CallDiagnosticEvent.STALE_REQUEST)
+        if (incoming == null || !validRequest ||
+            !permissionsReady() || !isStillRinging()) {
             // A stale queued start must not tear down a newer active call.
             if (request?.let(IncomingCalls.session::isCurrent) != true) finishCall()
             return START_NOT_STICKY
@@ -66,18 +72,25 @@ class IncomingCallService : Service() {
         val signal = CancellationSignal().also { cancellation = it }
         handler.postDelayed(deadline, 15_000L)
         handler.post(checkState)
+        record(CallDiagnosticEvent.QUERY_STARTED)
         callDebug("Checking previous calls")
         query = executor.submit {
             val result = CallHistoryChecker(contentResolver).check(incoming.number, incoming.beforeTimestamp, signal)
             if (!signal.isCanceled) handler.post {
                 if (!destroyed && request == incoming) {
                     val show = IncomingCalls.session.acceptResult(incoming, result)
+                    record(when (result) {
+                        HistoryResult.FIRST -> CallDiagnosticEvent.HISTORY_FIRST
+                        HistoryResult.PREVIOUS -> CallDiagnosticEvent.HISTORY_PREVIOUS
+                        HistoryResult.UNKNOWN -> CallDiagnosticEvent.HISTORY_UNKNOWN
+                    })
+                    if (result == HistoryResult.FIRST && !show) record(CallDiagnosticEvent.RESULT_IGNORED)
                     callDebug(when (result) {
                         HistoryResult.FIRST -> "First incoming call detected"
                         HistoryResult.PREVIOUS -> "Previous incoming call found"
                         HistoryResult.UNKNOWN -> "Call history unavailable"
                     })
-                    if (!show || !FirstCallPermissions.ready(this) || !isStillRinging() || !overlay.show()) {
+                    if (!show || !permissionsReady() || !isStillRinging() || !showOverlay()) {
                         finishCall()
                     }
                 }
@@ -101,14 +114,32 @@ class IncomingCallService : Service() {
         cancellation = null
         query?.cancel(true)
         query = null
+        if (overlay.isShowing()) record(CallDiagnosticEvent.OVERLAY_REMOVED)
         overlay.hide()
     }
 
     @Suppress("DEPRECATION")
     private fun isStillRinging(): Boolean = try {
-        getSystemService(TelephonyManager::class.java).callState == TelephonyManager.CALL_STATE_RINGING
+        val state = getSystemService(TelephonyManager::class.java).callState
+        if (state != TelephonyManager.CALL_STATE_RINGING) record(when (state) {
+            TelephonyManager.CALL_STATE_IDLE -> CallDiagnosticEvent.STATE_IDLE
+            TelephonyManager.CALL_STATE_OFFHOOK -> CallDiagnosticEvent.STATE_OFFHOOK
+            else -> CallDiagnosticEvent.STATE_OTHER
+        })
+        state == TelephonyManager.CALL_STATE_RINGING
     } catch (_: RuntimeException) {
+        record(CallDiagnosticEvent.STATE_FAILED)
         false
+    }
+
+    private fun record(event: CallDiagnosticEvent) = CallDiagnostics.record(this, event)
+
+    private fun permissionsReady(): Boolean = FirstCallPermissions.ready(this).also {
+        if (!it) record(CallDiagnosticEvent.PERMISSIONS_MISSING)
+    }
+
+    private fun showOverlay(): Boolean = overlay.show().also {
+        record(if (it) CallDiagnosticEvent.OVERLAY_ADDED else CallDiagnosticEvent.OVERLAY_FAILED)
     }
 
     private fun showServiceNotification() {

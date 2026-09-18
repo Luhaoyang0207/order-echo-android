@@ -37,6 +37,25 @@
             android:layout_height="wrap_content"
             android:minHeight="48dp"
             android:text="@string/grant_overlay_permission" />
+        <LinearLayout
+            android:id="@+id/first_call_diagnostics_controls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+            <Button
+                android:id="@+id/test_call_overlay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/first_call_test_overlay" />
+            <Button
+                android:id="@+id/show_call_diagnostics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/first_call_diagnostics_title" />
+        </LinearLayout>
         <Button
             android:id="@+id/first_call_app_settings"
             android:layout_width="match_parent"

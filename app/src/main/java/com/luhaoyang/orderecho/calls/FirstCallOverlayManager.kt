@@ -23,11 +23,11 @@ class FirstCallOverlayManager(context: Context, private val onTimeout: () -> Uni
 
     fun isShowing(): Boolean = view != null
 
-    fun show(): Boolean {
+    fun show(@androidx.annotation.StringRes labelResource: Int = R.string.first_call_label): Boolean {
         if (isShowing()) return true
         if (!Settings.canDrawOverlays(appContext)) return false
         val label = TextView(appContext).apply {
-            setText(R.string.first_call_label)
+            setText(labelResource)
             textSize = 24f
             setTextColor(Color.WHITE)
             setTypeface(typeface, Typeface.BOLD)

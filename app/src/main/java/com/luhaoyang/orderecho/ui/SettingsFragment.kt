@@ -5,6 +5,10 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.result.contract.ActivityResultContracts
+import com.luhaoyang.orderecho.BuildConfig
+import com.luhaoyang.orderecho.calls.CallDiagnostics
+import com.luhaoyang.orderecho.calls.CallDiagnosticEvent
+import com.luhaoyang.orderecho.calls.FirstCallOverlayManager
 import com.luhaoyang.orderecho.calls.FirstCallPermissions
 import android.os.Bundle
 import android.view.View
@@ -25,6 +29,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     private val requestCallPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         refreshCallPermissions()
     }
+    private var testOverlay: FirstCallOverlayManager? = null
     private lateinit var settings: AppSettings
     private lateinit var retentionChoices: RadioGroup
     private lateinit var status: TextView
@@ -51,6 +56,17 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         view.findViewById<Button>(R.id.first_call_app_settings).setOnClickListener {
             openPermissionSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
         }
+        view.findViewById<View>(R.id.first_call_diagnostics_controls).visibility =
+            if (BuildConfig.DEBUG) View.VISIBLE else View.GONE
+        view.findViewById<Button>(R.id.test_call_overlay).setOnClickListener {
+            testOverlay?.hide()
+            val overlay = FirstCallOverlayManager(requireContext().applicationContext) {}
+            testOverlay = overlay
+            val added = overlay.show(R.string.first_call_test_label)
+            CallDiagnostics.record(requireContext(), if (added) CallDiagnosticEvent.TEST_ADDED else CallDiagnosticEvent.TEST_FAILED)
+            if (!added) Toast.makeText(requireContext(), R.string.first_call_test_failed, Toast.LENGTH_LONG).show()
+        }
+        view.findViewById<Button>(R.id.show_call_diagnostics).setOnClickListener { showCallDiagnostics() }
         refreshStatus()
         refreshCallPermissions()
     }
@@ -61,6 +77,34 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             refreshStatus()
             refreshCallPermissions()
         }
+    }
+
+    override fun onStop() {
+        testOverlay?.hide()
+        testOverlay = null
+        super.onStop()
+    }
+
+    private fun showCallDiagnostics() {
+        val context = requireContext()
+        val report = getString(R.string.first_call_diagnostics_description) + "\n\n" + CallDiagnostics.report(context)
+        val text = TextView(context).apply {
+            this.text = report
+            setTextIsSelectable(true)
+            val padding = (16 * resources.displayMetrics.density).toInt()
+            setPadding(padding, padding, padding, padding)
+        }
+        val scroll = android.widget.ScrollView(context).apply { addView(text) }
+        AlertDialog.Builder(context)
+            .setTitle(R.string.first_call_diagnostics_title)
+            .setView(scroll)
+            .setPositiveButton(android.R.string.ok, null)
+            .setNeutralButton(R.string.first_call_diagnostics_clear) { _, _ ->
+                CallDiagnostics.clear(context)
+                CallDiagnostics.record(context, CallDiagnosticEvent.CLEARED)
+                Toast.makeText(context, R.string.first_call_diagnostics_retry, Toast.LENGTH_LONG).show()
+            }
+            .show()
     }
 
     private fun refreshCallPermissions() {

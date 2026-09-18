@@ -14,26 +14,42 @@ class IncomingCallReceiver : BroadcastReceiver() {
         if (intent.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) return
         when (intent.getStringExtra(TelephonyManager.EXTRA_STATE)) {
             TelephonyManager.EXTRA_STATE_IDLE -> {
+                CallDiagnostics.record(context, CallDiagnosticEvent.IDLE)
                 IncomingCalls.session.idle()
                 IncomingCalls.service?.finishCall()
                 callDebug("Call state IDLE")
             }
             TelephonyManager.EXTRA_STATE_OFFHOOK -> {
+                CallDiagnostics.record(context, CallDiagnosticEvent.OFFHOOK)
                 IncomingCalls.session.offhook()
                 IncomingCalls.service?.finishCall()
                 callDebug("Call state OFFHOOK")
             }
             TelephonyManager.EXTRA_STATE_RINGING -> {
-                if (!FirstCallPermissions.ready(context)) return
+                CallDiagnostics.record(context, CallDiagnosticEvent.RINGING)
+                if (!FirstCallPermissions.ready(context)) {
+                    CallDiagnostics.record(context, CallDiagnosticEvent.PERMISSIONS_MISSING)
+                    return
+                }
                 // A blank broadcast may arrive before the numbered one. Keep its earlier time.
                 @Suppress("DEPRECATION")
                 val number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
-                val request = IncomingCalls.session.ringing(number, receivedAt) ?: return
+                val request = IncomingCalls.session.ringing(number, receivedAt)
+                if (request == null) {
+                    CallDiagnostics.record(context, when {
+                        number.isNullOrBlank() -> CallDiagnosticEvent.NUMBER_MISSING
+                        AndroidCallNumber.canonical(number) == null -> CallDiagnosticEvent.NUMBER_INVALID
+                        else -> CallDiagnosticEvent.SESSION_IGNORED
+                    })
+                    return
+                }
                 callDebug("Incoming call detected; incoming number normalized")
                 try {
                     context.startForegroundService(IncomingCallService.intent(context, request))
+                    CallDiagnostics.record(context, CallDiagnosticEvent.SERVICE_REQUESTED)
                 } catch (_: RuntimeException) {
                     IncomingCalls.session.dismiss(request)
+                    CallDiagnostics.record(context, CallDiagnosticEvent.SERVICE_FAILED)
                     callDebug("Call identification service unavailable")
                 }
             }
