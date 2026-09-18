@@ -4,6 +4,12 @@
 
 First-incoming-call identification is implemented and verified on an Android 8 / API 26 emulator. Next: install the APK on Huawei BAC-AL00 and complete the physical EMUI acceptance in `docs/FIRST_CALL_TESTING.md`. The earlier asynchronous recording filesystem follow-up remains separate.
 
+## 2026-09-18 — Publication branch
+
+- The user selected `feat/first-incoming-call` for uploading the completed feature to this project's existing `origin`.
+- Verified `origin` is `https://github.com/Luhaoyang0207/order-echo-android.git`: its main branch exactly matches this feature's existing base commit `6ff5162e7c81be3358a8db43d46ffadbc7c7fa6c`.
+- Renamed the local branch to `feat/first-incoming-call`. Feature commits are `6abc367`, `e84ed90`, `9a19b1d`; this checkpoint changes only this handoff document.
+- Existing untracked `dist/` APKs are excluded. No code changes or test reruns were needed; next task remains Huawei physical-device acceptance.
 ## 2026-09-17 — Completed first incoming caller overlay
 
 ### Changes and decisions
