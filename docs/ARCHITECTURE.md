@@ -86,3 +86,16 @@ settings/recovery. MainActivity routes only its own storage permission callback;
 Settings can be entered even if storage was denied. The original boot receiver is
 unchanged: it still only schedules recording cleanup. Manifest PHONE_STATE receipt
 provides first-call background entry after reboot/unlock, subject to EMUI controls.
+## Huawei runtime reception correction (2026-09-19)
+
+The opt-in `CallMonitoringService` owns one context-registered protected PHONE_STATE
+receiver and an ongoing generic notification. Runtime delivery forwards to the
+existing receiver/session/lookup pipeline; the original manifest receiver remains
+fallback. Both entry and lookup/display recheck the enabled preference. Off cancels
+current work immediately. No listener polling, caller persistence or new permission.
+
+`CallMonitoring` stores only user intent and coordinates enable/disable/recovery.
+`CallMonitoringRecoveryReceiver` attempts restoration after BOOT_COMPLETED and
+MY_PACKAGE_REPLACED; MainActivity resume retries an enabled choice. All paths check
+permissions; START_STICKY restoration is best effort. This updates the older
+manifest-only/short-service-only description above; cleanup boot behavior is unchanged.

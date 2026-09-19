@@ -21,6 +21,9 @@ class IncomingCallServiceTest {
         @Suppress("DEPRECATION")
         val ringing = context.getSystemService(TelephonyManager::class.java).callState == TelephonyManager.CALL_STATE_RINGING
         assumeTrue(ringing)
+        val monitor = context.getSharedPreferences("call_monitoring", android.content.Context.MODE_PRIVATE)
+        val wasEnabled = monitor.getBoolean("enabled", false)
+        monitor.edit().putBoolean("enabled", true).commit()
         try {
             instrumentation.runOnMainSync {
                 IncomingCalls.service?.finishCall()
@@ -37,6 +40,7 @@ class IncomingCallServiceTest {
                 assertNotNull("The new first-call overlay must still own a live service", IncomingCalls.service)
             }
         } finally {
+            monitor.edit().putBoolean("enabled", wasEnabled).commit()
             instrumentation.runOnMainSync {
                 IncomingCalls.session.idle()
                 IncomingCalls.service?.finishCall()

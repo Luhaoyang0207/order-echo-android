@@ -10,6 +10,10 @@ import java.util.Locale
 
 /** Fixed vocabulary only: never pass a number, Intent, cursor or exception message here. */
 internal enum class CallDiagnosticEvent(val label: String) {
+    MONITOR_READY("正式来电监听已注册，持续运行中"),
+    MONITOR_RINGING("正式运行时监听：收到响铃"),
+    MONITOR_FAILED("正式来电监听启动失败，请重新开启并查看权限"),
+    MONITOR_STOPPED("正式来电监听已停止"),
     RINGING("收到响铃广播"),
     IDLE("收到空闲／挂断广播"),
     OFFHOOK("收到接通／通话中广播"),

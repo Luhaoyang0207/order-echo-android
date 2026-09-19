@@ -1,5 +1,33 @@
 # Decisions
 
+## 2026-09-19 — Enable foreground runtime reception on Huawei (D3)
+
+D2 physical-device photos show default/SIM1 PhoneStateListener RINGING with number
+presence and runtime PHONE_STATE RINGING/IDLE. There are no original manifest-receiver
+events during the same foreground probe. This supports repairing event reception
+rather than changing caller identity or history rules; the vendor-level reason the
+manifest receiver is not invoked remains unknown.
+
+Use one production, private foreground CallMonitoringService with a runtime
+IncomingCallReceiver path. Reuse existing session deduplication, worker lookup and
+short-lived overlay service. Do not feed multiple listener APIs into the session.
+Keep the protected manifest receiver as fallback; both paths respect a new explicit
+user-enabled preference, false by default (including upgrades). No phone state or
+number is persisted. No permission or dependency is added.
+
+The monitor has a persistent generic notification with Stop and a Settings toggle.
+Disable invalidates pending sessions, cancels lookup/display and stops monitoring.
+Settings observes changes so notification Stop cannot leave a stale Close button
+that accidentally enables the feature. START_STICKY, ordinary boot after unlock,
+package replacement and app resume attempt to restore only the enabled choice with
+ready permissions; they cannot bypass force-stop, denied permissions or EMUI controls.
+
+This supersedes the September 17 decision to rely solely on manifest reception and
+avoid a long-lived service. Foreground runtime registration is necessary for the
+path that actually delivered events on the target phone. The recording cleanup
+receiver remains unchanged; a separate recovery receiver handles call monitoring.
+
+
 ## 2026-09-19 — Explicit 60-second reception probe (D2)
 
 The user confirmed D1's test overlay is visible and a freshly reopened report still

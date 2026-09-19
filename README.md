@@ -123,13 +123,13 @@ The current version scans files on the main thread during startup cleanup, refre
 
 When the local system Call Log contains no earlier incoming, missed, rejected or blocked call from a number, a small `第一次来电` hint appears near the top while ringing. Outgoing-only history does not count. There is no customer database, stored phone-number list, contact lookup or network access.
 
-首次安装后打开 App，在「设置」允许电话、通话记录与「显示在其他应用上层」权限；华为 EMUI 8 还需允许自启动、关联启动、后台运行，并放宽本应用的电池优化。普通重启解锁后不要求再次打开 App；手动强行停止后需要打开一次。
+安装或从 D1/D2 升级后，在「设置」允许电话、通话记录、悬浮窗权限，再点击「开启来电识别」。开关默认关闭。华为 EMUI 8 还需允许自启动、关联启动、后台运行，并放宽电池优化。开启后在通知栏保留「来电识别已开启」通知；可从设置或通知栏关闭。普通重启解锁或覆盖更新后会按已保存的开关尝试恢复，仍受系统限制；手动强行停止后需要打开一次。
 
-After first installation, open Settings in the app and grant Phone, Call Log and Display over other apps. On EMUI 8, allow auto-launch, secondary launch and background execution, and exempt the app from restrictive battery optimization. Ordinary reboot after unlocking should not require reopening; a manually force-stopped app must be opened once.
+After installation or upgrading from D1/D2, grant Phone, Call Log and Display over other apps, then tap Enable call identification in Settings. The switch defaults off. An ongoing generic notification keeps runtime reception active; Settings and the notification both offer Stop. Allow EMUI auto/secondary/background launch and battery exceptions. Boot after unlock and app updates attempt to restore the saved enabled choice, subject to system restrictions; force-stop requires reopening the app.
 
-来电处理使用短时前台服务，会出现一条无号码的系统工作通知；完成后自动关闭。悬浮窗不接收触摸、不抢焦点，接听或挂断时移除，显示最多 12 秒。旧号码不会显示首次悬浮提示。
+后台监听使用常驻前台服务；来电查询和显示另外使用短时前台服务，其工作通知完成后自动关闭。所有通知均不含号码。悬浮窗不接收触摸、不抢焦点，接听或挂断时移除，显示最多 12 秒。旧号码不会显示首次悬浮提示。
 
-A short-lived foreground service shows the required generic system notification during processing. The overlay is non-touchable and non-focusable, disappears on answer/end, and lasts at most 12 seconds. Returning callers do not get the first-caller overlay.
+A persistent foreground service owns runtime reception. A separate short-lived foreground service shows a generic notification during lookup/display; neither notification contains a caller number. The overlay is non-touchable and non-focusable, disappears on answer/end, and lasts at most 12 seconds. Returning callers do not get the first-caller overlay.
 
 按第一条 RINGING 的接收时间减 5 秒查询历史，重复事件不移动边界。挪威八位本地、`+47` 和 `0047` 格式可匹配。权限或查询异常、未知号码不显示。由于系统不提供精确通话 ID/开始时间，异常广播延迟、五秒内快速重拨、未落库记录及系统历史删除有明确限制。锁屏、EMUI 杀后台和双卡/通话等待须真机验证，不承诺突破系统限制。
 

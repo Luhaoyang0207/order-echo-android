@@ -2,8 +2,31 @@
 
 ## Current goal
 
-Investigate missing first-caller hint on Huawei BAC-AL00. The user confirmed three permissions, EMUI launch management and removal of the test number history, but sees no hint even after opening the app before calling. USB is unavailable. D1 ordinary overlay works, but the user confirms the reopened report still has only CLEARED. D2 bounded event-reception comparison APK is ready for the user to run; the actual Huawei root cause is still unknown. Recording filesystem follow-up remains separate.
+D3 runtime-reception fix is ready for Huawei installation and physical acceptance. D2 photos prove runtime PHONE_STATE and default/SIM1 callbacks deliver ringing with a number while the original manifest receiver remains silent. Production now offers opt-in foreground runtime monitoring; emulator end-to-end verification passed with the original receiver disabled. Actual Huawei first-caller overlay visibility/reliability remains to be confirmed. Recording filesystem follow-up stays separate.
 
+## 2026-09-19 — D3 runtime reception fix
+
+### Evidence and change
+
+- User's D2 photos cover startup at 15:39:27, SIM1/default/runtime RINGING and number-presence at 15:39:44–45, IDLE at 15:40:07 and timeout/stop at 15:40:27. Original manifest receiver entries are absent. Repair the entry path proven to work; vendor-specific cause of missing manifest dispatch remains unknown.
+- Added CallMonitoring user intent (only an enabled Boolean, default false) and non-exported foreground CallMonitoringService with one runtime PHONE_STATE receiver. Forward into existing IncomingCallReceiver/session/worker/overlay path. Both original and runtime reception, and lookup completion, respect Off.
+- Settings has Enable/Disable and an explanation of the persistent generic notification. Notification has Stop. Disable resets session, cancels work and stops monitoring. Preference observation keeps visible Settings controls current when stopped externally.
+- START_STICKY, BOOT_COMPLETED/MY_PACKAGE_REPLACED recovery and Activity resume attempt restoration only for enabled, permission-ready state. Existing recording cleanup boot receiver is unchanged. No new permission/dependency/network/number persistence; D2 remains a separate debug-only diagnostic tool.
+- Files: new calls/CallMonitoring.kt, calls/CallMonitoringService.kt, Android CallMonitoringTest; receiver/service gating, CallDiagnostics, MainActivity/SettingsFragment, manifest/layout/strings; adjusted CallDiagnosticsTest/IncomingCallServiceTest, new FirstCallSettingsTest regression; README, ARCHITECTURE, DECISIONS, FIRST_CALL_TESTING, original design revision and this HANDOFF.
+
+### Verification
+
+- Unit tests: 61, zero failures/errors. Debug, Android-test and Release APK builds passed; debug lint zero errors and 20 existing warnings.
+- API26 instrumentation: 7 relevant tests passed (monitor enable/duplicate/disable/recovery, diagnostic privacy/bounding, Settings). Existing queued-service race test separately passed during an isolated emulated call. New monitor initially failed compilation as absent; notification-stop UI regression failed on stale Close label before the observer fix, then passed.
+- Independent review found the stale Settings button after notification Stop. Fixed with lifecycle-bound preference observation; reviewer confirmed no remaining blocker.
+- Fault injection on owned API26 emulator: disabled IncomingCallReceiver component using app's own UID. D2 had zero overlay windows. Installed D3, explicitly enabled, returned Home/screen asleep, generated a fresh GSM call: runtime RINGING → HISTORY_FIRST → one overlay, visually confirmed `第一次来电` over the dialer. Same number later produced HISTORY_PREVIOUS with zero overlay windows.
+- Rebooted the emulator with monitoring enabled: before opening the app, the monitoring service was present and foreground with enabled preference true. Restored the original receiver component, turned feature off in Settings and generated another fresh call: zero overlay windows and no monitor/lookup service. Test emulator stopped after checks.
+- Evidence in ignored app/build: monitor-red.log, monitor-ui-red-test.log, monitor-final-build.log, monitor-final-tests.log, monitor-service-race-test.log, monitor-disabled-entry-before/after.log, monitor-incoming.png, monitor-runtime-events.xml, monitor-after-reboot.log, monitor-disabled-services.log.
+- Delivery APK: `app/build/outputs/apk/debug/OrderEcho-first-call-D3.apk`; SHA256 `4D5D6608886CF55EF2BABC4CF83E01A2D487636E7E7C27E72A6CC5A2B38738C0`. Existing untracked dist APKs remain untouched.
+
+### Next
+
+User covers the old APK, grants existing permissions and taps Enable call identification (default Off for D1/D2 upgrades). Confirm persistent notification, delete the test caller's system incoming history and test normal incoming call; do not use the 60-second probe as the production toggle. Return D3 report if no hint. Huawei foreground-service survival, lockscreen/dialer visibility, reboot and two-SIM behavior still require physical acceptance; do not claim the target phone is fixed solely from emulator success.
 ## 2026-09-19 — D2 bounded reception probe ready
 
 - Confirmed user evidence: D1 test overlay is visible; after a real call, closing and reopening the report still shows only CLEARED. No successful entry into the manifest receiver was recorded. This does not prove an OEM-specific root cause.

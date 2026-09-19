@@ -12,6 +12,7 @@ class IncomingCallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val receivedAt = System.currentTimeMillis()
         if (intent.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) return
+        if (!CallMonitoring.isEnabled(context)) return
         when (intent.getStringExtra(TelephonyManager.EXTRA_STATE)) {
             TelephonyManager.EXTRA_STATE_IDLE -> {
                 CallDiagnostics.record(context, CallDiagnosticEvent.IDLE)

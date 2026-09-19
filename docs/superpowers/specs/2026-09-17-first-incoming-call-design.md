@@ -74,3 +74,12 @@ isolated fake provider data (never modify the real device Call Log).
 Build unit tests, app APK, test APK and lint. Device checklist covers all twelve
 user scenarios, lock screen, EMUI background/reboot, denial/revocation and existing
 recording functionality. No connected Huawei means no claim of physical acceptance.
+
+## Evidence-based revision, 2026-09-19
+
+D2 on Huawei delivered runtime PHONE_STATE and default/SIM1 callbacks with numbers
+while the original manifest receiver remained silent. Replace the manifest-only
+lifetime assumption with opt-in foreground runtime reception, a persistent generic
+notification and explicit Off. Preserve the lookup/session/overlay rules. Attempt
+restoration of the enabled preference after boot/unlock, APK update and Activity
+resume; subject to platform/EMUI restrictions. See DECISIONS for full rationale.

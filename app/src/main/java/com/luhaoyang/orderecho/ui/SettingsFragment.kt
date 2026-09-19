@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.result.contract.ActivityResultContracts
 import com.luhaoyang.orderecho.BuildConfig
+import com.luhaoyang.orderecho.calls.CallMonitoring
 import com.luhaoyang.orderecho.calls.CallDiagnostics
 import com.luhaoyang.orderecho.calls.CallDiagnosticEvent
 import com.luhaoyang.orderecho.calls.FirstCallOverlayManager
@@ -29,6 +30,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     private val requestCallPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         refreshCallPermissions()
     }
+    private var stopObservingMonitoring: (() -> Unit)? = null
     private var testOverlay: FirstCallOverlayManager? = null
     private var diagnosticsDialog: AlertDialog? = null
     private var stopObservingDiagnostics: (() -> Unit)? = null
@@ -39,6 +41,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         settings = AppSettings(requireContext().applicationContext)
+        stopObservingMonitoring = CallMonitoring.observe(requireContext(), ::refreshCallPermissions)
         retentionChoices = view.findViewById(R.id.retention_choices)
         status = view.findViewById(R.id.cleanup_status)
         retentionChoices.check(retentionId(settings.retentionDays()))
@@ -57,6 +60,14 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         }
         view.findViewById<Button>(R.id.first_call_app_settings).setOnClickListener {
             openPermissionSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        }
+        view.findViewById<Button>(R.id.toggle_call_monitor).setOnClickListener {
+            if (CallMonitoring.isEnabled(requireContext())) {
+                CallMonitoring.disable(requireContext())
+            } else if (!CallMonitoring.enable(requireContext())) {
+                Toast.makeText(requireContext(), R.string.call_monitor_failed, Toast.LENGTH_LONG).show()
+            }
+            refreshCallPermissions()
         }
         view.findViewById<View>(R.id.first_call_diagnostics_controls).visibility =
             if (BuildConfig.DEBUG) View.VISIBLE else View.GONE
@@ -94,6 +105,8 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     }
 
     override fun onDestroyView() {
+        stopObservingMonitoring?.invoke()
+        stopObservingMonitoring = null
         stopObservingDiagnostics?.invoke()
         stopObservingDiagnostics = null
         diagnosticsDialog?.dismiss()
@@ -141,6 +154,13 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     private fun refreshCallPermissions() {
         val root = view ?: return
         val context = requireContext()
+        val enabled = CallMonitoring.isEnabled(context)
+        root.findViewById<TextView>(R.id.call_monitor_status).setText(
+            if (enabled) R.string.call_monitor_enabled else R.string.call_monitor_disabled)
+        root.findViewById<Button>(R.id.toggle_call_monitor).apply {
+            setText(if (enabled) R.string.call_monitor_disable else R.string.call_monitor_enable)
+            isEnabled = enabled || FirstCallPermissions.ready(context)
+        }
         fun state(granted: Boolean) = getString(if (granted) R.string.permission_granted else R.string.permission_missing)
         root.findViewById<TextView>(R.id.first_call_permission_status).text = getString(
             R.string.first_call_permission_status,

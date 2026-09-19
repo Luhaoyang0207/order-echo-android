@@ -26,6 +26,13 @@
         <service
             android:name=".calls.IncomingCallService"
             android:exported="false" />
+        <service android:name=".calls.CallMonitoringService" android:exported="false" />
+        <receiver android:name=".calls.CallMonitoringRecoveryReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
         <!-- PHONE_STATE is a protected system broadcast and an Android 8 background exception. -->
         <receiver android:name=".calls.IncomingCallReceiver" android:exported="true">
             <intent-filter>

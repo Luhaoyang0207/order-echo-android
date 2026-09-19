@@ -8,6 +8,7 @@ import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import android.os.SystemClock
 import androidx.test.uiautomator.UiDevice
+import com.luhaoyang.orderecho.calls.CallMonitoring
 import com.luhaoyang.orderecho.calls.CallDiagnostics
 import com.luhaoyang.orderecho.calls.CallDiagnosticEvent
 import org.hamcrest.Matchers.containsString
@@ -69,6 +70,27 @@ class FirstCallSettingsTest {
             SystemClock.sleep(100)
         } while (SystemClock.uptimeMillis() < deadline)
         return false
+    }
+
+    @Test fun externalStopUpdatesSettingsWithoutReopeningScreen() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        val prefs = context.getSharedPreferences("call_monitoring", Context.MODE_PRIVATE)
+        val previous = prefs.getBoolean("enabled", false)
+        try {
+            instrumentation.runOnMainSync { CallMonitoring.disable(context) }
+            ActivityScenario.launch(MainActivity::class.java).use {
+                onView(withId(R.id.settings_tab)).perform(click())
+                onView(withId(R.id.toggle_call_monitor)).perform(scrollTo(), click())
+                onView(withId(R.id.toggle_call_monitor)).check(matches(withText(R.string.call_monitor_disable)))
+                // Same state transition as the notification Stop, with Settings still resumed.
+                instrumentation.runOnMainSync { CallMonitoring.disable(context) }
+                onView(withId(R.id.toggle_call_monitor)).check(matches(withText(R.string.call_monitor_enable)))
+            }
+        } finally {
+            instrumentation.runOnMainSync { CallMonitoring.disable(context) }
+            prefs.edit().putBoolean("enabled", previous).commit()
+        }
     }
 
     @Test fun unrelatedPermissionResultDoesNotReplaceSettingsWithStorageRecovery() {

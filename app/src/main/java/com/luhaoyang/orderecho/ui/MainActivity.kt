@@ -21,6 +21,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.luhaoyang.orderecho.calls.CallMonitoring
 import com.luhaoyang.orderecho.R
 import com.luhaoyang.orderecho.cleanup.CleanupStartup
 import com.luhaoyang.orderecho.cleanup.CleanupResult
@@ -66,6 +67,7 @@ class MainActivity : AppCompatActivity(), SettingsHost {
 
     override fun onResume() {
         super.onResume()
+        CallMonitoring.restoreIfEnabled(this)
         if (hasStoragePermission() && showingSettings) initializeRecordings()
         if (hasStoragePermission() && !showingSettings) {
             if (::viewModel.isInitialized) render(viewModel.refresh()) else showRecordingList()

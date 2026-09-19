@@ -66,7 +66,7 @@
     <string name="first_call_test_label">悬浮窗测试</string>
     <string name="first_call_test_failed">测试悬浮窗添加失败，请查看来电诊断。</string>
     <string name="first_call_diagnostics_title">查看来电诊断</string>
-    <string name="first_call_diagnostics_description">诊断版 D2 · 本页自动刷新。仅保留本机最近 32 条处理步骤，不记录号码。\n监听测试启动后，请在 60 秒内打入一次电话；无需删除通话记录。挂断后返回此页。测试会自动停止，也可从通知栏停止。</string>
+    <string name="first_call_diagnostics_description">版本 D3 · 本页自动刷新，仅保留本机最近 32 条处理步骤，不记录号码。\n正式使用请在设置中开启来电识别，确认通知栏有常驻通知，再测试来电。60 秒监听测试仅供排障。</string>
     <string name="first_call_diagnostics_clear">清空诊断记录</string>
     <string name="first_call_diagnostics_retry">已清空诊断。请测试一次来电，结束后返回查看来电诊断。</string>
     <string name="first_call_probe_title">开始 60 秒监听测试</string>
@@ -75,4 +75,12 @@
     <string name="first_call_probe_stop">停止测试</string>
     <string name="first_call_probe_failed">测试未能启动，请查看诊断记录。</string>
     <string name="first_call_diagnostics_report">%1$s\n\n%2$s</string>
+    <string name="call_monitor_title">来电识别已开启</string>
+    <string name="call_monitor_notification">正在等待来电，首次号码响铃时显示提示</string>
+    <string name="call_monitor_enable">开启来电识别</string>
+    <string name="call_monitor_disable">关闭来电识别</string>
+    <string name="call_monitor_enabled">来电识别：已开启，请确认通知栏有“来电识别已开启”通知</string>
+    <string name="call_monitor_disabled">来电识别：未开启</string>
+    <string name="call_monitor_explanation">开启后保留一条常驻通知，以便在后台接收来电。可在此处或通知栏关闭。重启后尝试恢复，仍需允许华为后台运行；被强行停止后请重新打开 App。</string>
+    <string name="call_monitor_failed">未能开启来电识别，请确认三项权限已允许，并查看诊断。</string>
 </resources>

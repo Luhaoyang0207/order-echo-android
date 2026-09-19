@@ -134,7 +134,7 @@ class IncomingCallService : Service() {
 
     private fun record(event: CallDiagnosticEvent) = CallDiagnostics.record(this, event)
 
-    private fun permissionsReady(): Boolean = FirstCallPermissions.ready(this).also {
+    private fun permissionsReady(): Boolean = (CallMonitoring.isEnabled(this) && FirstCallPermissions.ready(this)).also {
         if (!it) record(CallDiagnosticEvent.PERMISSIONS_MISSING)
     }
 

@@ -17,12 +17,15 @@ class CallDiagnosticsTest {
     private val context = instrumentation.targetContext
 
     @Test fun missingPermissionStillLeavesRingingEvidenceWithoutCallerNumber() {
+        val monitor = context.getSharedPreferences("call_monitoring", Context.MODE_PRIVATE)
+        val wasEnabled = monitor.getBoolean("enabled", false)
         val denied = object : ContextWrapper(context) {
             override fun checkPermission(permission: String, pid: Int, uid: Int) = PackageManager.PERMISSION_DENIED
         }
         val prefs = context.getSharedPreferences("first_call_diagnostics", Context.MODE_PRIVATE)
         val original = prefs.getString("events", null)
         try {
+            monitor.edit().putBoolean("enabled", true).commit()
             CallDiagnostics.clear(context)
             instrumentation.runOnMainSync {
                 IncomingCallReceiver().onReceive(denied,
@@ -36,6 +39,7 @@ class CallDiagnosticsTest {
             assertFalse(report.contains("91234567"))
             assertFalse(prefs.all.toString().contains("91234567"))
         } finally {
+            monitor.edit().putBoolean("enabled", wasEnabled).commit()
             prefs.edit().putString("events", original).commit()
         }
     }

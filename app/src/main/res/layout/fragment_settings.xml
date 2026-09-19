@@ -37,6 +37,21 @@
             android:layout_height="wrap_content"
             android:minHeight="48dp"
             android:text="@string/grant_overlay_permission" />
+        <TextView
+            android:id="@+id/call_monitor_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+        <Button
+            android:id="@+id/toggle_call_monitor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/call_monitor_enable" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/call_monitor_explanation" />
         <LinearLayout
             android:id="@+id/first_call_diagnostics_controls"
             android:layout_width="match_parent"
