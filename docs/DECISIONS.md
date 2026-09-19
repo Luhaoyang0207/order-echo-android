@@ -1,5 +1,35 @@
 # Decisions
 
+## 2026-09-19 — Explicit 60-second reception probe (D2)
+
+The user confirmed D1's test overlay is visible and a freshly reopened report still
+contains only CLEARED after a phone call. Collect independent reception evidence
+before selecting a permanent receiver/listener change.
+
+A private service declared and implemented only in src/debug runs after an explicit
+Settings tap, enters the foreground with a generic stop action, and unregisters
+its runtime PHONE_STATE receiver and PhoneStateListeners after about 60 seconds or
+manual stop. It is START_NOT_STICKY, has no boot entry, never feeds IncomingCalls,
+never queries Call Log, and does not control calls. Repeated starts do not extend
+the current deadline. It observes the default subscription and up to two current
+active subscriptions; subscription IDs remain transient.
+
+Record only fixed enum events, number-present/absent flags and timestamps within
+the existing 32-event limit. A listener API return proves only a registration
+request, not delivery; an actual callback is separate evidence. AppOps status is
+another clue, not proof of successful event delivery. The probe's foreground
+process can itself improve the original manifest receiver's delivery: if both
+paths work during the probe, do not attribute that solely to runtime registration.
+
+The report observes preference changes while displayed and unregisters on dismiss
+or view destruction, avoiding D1's stale-open-dialog ambiguity. No production
+identification behavior or permission was changed.
+
+References: Android [broadcast registration](https://developer.android.com/develop/background-work/background-tasks/broadcasts),
+[implicit broadcast exceptions](https://developer.android.com/develop/background-work/background-tasks/broadcasts/broadcast-exceptions),
+and [Android 8 TelephonyManager implementation](https://android.googlesource.com/platform/frameworks/base/+/android-8.0.0_r1/telephony/java/android/telephony/TelephonyManager.java).
+
+
 ## 2026-09-18 — Local debug diagnostics for Huawei acceptance
 
 The physical phone shows no hint even after the user confirmed all three permissions,

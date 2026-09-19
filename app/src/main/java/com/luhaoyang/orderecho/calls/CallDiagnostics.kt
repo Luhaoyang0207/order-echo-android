@@ -1,6 +1,8 @@
 package com.luhaoyang.orderecho.calls
 
 import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import com.luhaoyang.orderecho.BuildConfig
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -35,6 +37,32 @@ internal enum class CallDiagnosticEvent(val label: String) {
     DEADLINE("识别达到安全超时，已停止"),
     TEST_ADDED("系统已接受测试悬浮窗；是否可见需目视确认"),
     TEST_FAILED("测试悬浮窗添加失败"),
+    PROBE_REQUESTED("已请求启动监听对照测试"),
+    PROBE_START_FAILED("监听对照测试启动失败"),
+    PROBE_STARTED("监听测试已启动，约 60 秒后自动停止"),
+    PROBE_ALREADY_RUNNING("监听测试正在运行，未重复注册或延长"),
+    PROBE_PHONE_ACCESS_ALLOWED("系统电话访问规则：允许"),
+    PROBE_PHONE_ACCESS_BLOCKED("系统电话访问规则：忽略或拒绝"),
+    PROBE_PHONE_ACCESS_DEFAULT("系统电话访问规则：默认，由系统判断"),
+    PROBE_PHONE_ACCESS_UNKNOWN("系统电话访问规则：无法判断"),
+    PROBE_RECEIVER_READY("运行时广播监听已注册"),
+    PROBE_RECEIVER_FAILED("运行时广播监听注册失败"),
+    PROBE_RECEIVER_RINGING("运行时广播：收到响铃"),
+    PROBE_RECEIVER_IDLE("运行时广播：收到空闲／挂断"),
+    PROBE_RECEIVER_OFFHOOK("运行时广播：收到通话中"),
+    PROBE_LISTENER_READY("已请求注册一路电话状态回调"),
+    PROBE_LISTENER_FAILED("一路电话状态回调注册失败"),
+    PROBE_SIM_FAILED("无法完成额外 SIM 卡监听注册"),
+    PROBE_LISTENER_RINGING("默认电话状态回调：收到响铃"),
+    PROBE_SIM1_RINGING("SIM 1 电话状态回调：收到响铃"),
+    PROBE_SIM2_RINGING("SIM 2 电话状态回调：收到响铃"),
+    PROBE_LISTENER_IDLE("电话状态回调：空闲（注册时也可能立即回调）"),
+    PROBE_LISTENER_OFFHOOK("电话状态回调：通话中"),
+    PROBE_NUMBER_PRESENT("此事件带有号码（未记录号码内容）"),
+    PROBE_NUMBER_MISSING("此事件没有提供号码"),
+    PROBE_TIMEOUT("监听测试到时，正在停止"),
+    PROBE_CLEANUP_FAILED("部分监听注销失败，已停止处理回调"),
+    PROBE_STOPPED("监听测试已停止"),
     CLEARED("已清空诊断，请进行一次来电测试")
 }
 
@@ -43,6 +71,31 @@ internal object CallDiagnostics {
     private const val PREFERENCES = "first_call_diagnostics"
     private const val EVENTS = "events"
     private const val LIMIT = 32
+
+    fun startProbe(context: Context): Boolean {
+        if (!BuildConfig.DEBUG) return false
+        record(context, CallDiagnosticEvent.PROBE_REQUESTED)
+        return try {
+            // The component exists only in src/debug; release APKs contain no probe service.
+            val component = context.startForegroundService(Intent().setClassName(context.packageName,
+                "com.luhaoyang.orderecho.calls.CallReceptionProbeService"))
+            if (component == null) record(context, CallDiagnosticEvent.PROBE_START_FAILED)
+            component != null
+        } catch (_: RuntimeException) {
+            record(context, CallDiagnosticEvent.PROBE_START_FAILED)
+            false
+        }
+    }
+
+    fun observe(context: Context, changed: () -> Unit): () -> Unit {
+        if (!BuildConfig.DEBUG) return {}
+        val prefs = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == EVENTS || key == null) changed()
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        return { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
 
     @Synchronized fun record(context: Context, event: CallDiagnosticEvent) {
         if (!BuildConfig.DEBUG) return

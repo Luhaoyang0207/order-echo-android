@@ -50,6 +50,12 @@
                 android:minHeight="48dp"
                 android:text="@string/first_call_test_overlay" />
             <Button
+                android:id="@+id/start_call_probe"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/first_call_probe_title" />
+            <Button
                 android:id="@+id/show_call_diagnostics"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

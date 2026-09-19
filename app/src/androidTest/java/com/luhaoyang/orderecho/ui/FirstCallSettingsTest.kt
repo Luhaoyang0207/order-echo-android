@@ -47,6 +47,10 @@ class FirstCallSettingsTest {
                 scenario.moveToState(Lifecycle.State.RESUMED)
                 onView(withId(R.id.show_call_diagnostics)).perform(scrollTo(), click())
                 onView(withText(containsString(CallDiagnosticEvent.TEST_ADDED.label))).check(matches(isDisplayed()))
+                instrumentation.runOnMainSync {
+                    CallDiagnostics.record(context, CallDiagnosticEvent.HISTORY_UNKNOWN)
+                }
+                onView(withText(containsString(CallDiagnosticEvent.HISTORY_UNKNOWN.label))).check(matches(isDisplayed()))
                 onView(withText(R.string.first_call_diagnostics_clear)).perform(click())
                 assertFalse(CallDiagnostics.report(context).contains(CallDiagnosticEvent.TEST_ADDED.label))
                 assertTrue(CallDiagnostics.report(context).contains(CallDiagnosticEvent.CLEARED.label))

@@ -30,6 +30,8 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         refreshCallPermissions()
     }
     private var testOverlay: FirstCallOverlayManager? = null
+    private var diagnosticsDialog: AlertDialog? = null
+    private var stopObservingDiagnostics: (() -> Unit)? = null
     private lateinit var settings: AppSettings
     private lateinit var retentionChoices: RadioGroup
     private lateinit var status: TextView
@@ -67,6 +69,12 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             if (!added) Toast.makeText(requireContext(), R.string.first_call_test_failed, Toast.LENGTH_LONG).show()
         }
         view.findViewById<Button>(R.id.show_call_diagnostics).setOnClickListener { showCallDiagnostics() }
+        view.findViewById<Button>(R.id.start_call_probe).setOnClickListener {
+            val started = CallDiagnostics.startProbe(requireContext())
+            Toast.makeText(requireContext(), if (started) R.string.first_call_probe_instructions else R.string.first_call_probe_failed,
+                Toast.LENGTH_LONG).show()
+            showCallDiagnostics()
+        }
         refreshStatus()
         refreshCallPermissions()
     }
@@ -85,17 +93,29 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         super.onStop()
     }
 
+    override fun onDestroyView() {
+        stopObservingDiagnostics?.invoke()
+        stopObservingDiagnostics = null
+        diagnosticsDialog?.dismiss()
+        diagnosticsDialog = null
+        super.onDestroyView()
+    }
+
     private fun showCallDiagnostics() {
+        stopObservingDiagnostics?.invoke()
+        stopObservingDiagnostics = null
+        diagnosticsDialog?.dismiss()
         val context = requireContext()
-        val report = getString(R.string.first_call_diagnostics_description) + "\n\n" + CallDiagnostics.report(context)
         val text = TextView(context).apply {
-            this.text = report
             setTextIsSelectable(true)
             val padding = (16 * resources.displayMetrics.density).toInt()
             setPadding(padding, padding, padding, padding)
         }
+        fun refresh() {
+            text.text = context.getString(R.string.first_call_diagnostics_report, context.getString(R.string.first_call_diagnostics_description), CallDiagnostics.report(context))
+        }
         val scroll = android.widget.ScrollView(context).apply { addView(text) }
-        AlertDialog.Builder(context)
+        val dialog = AlertDialog.Builder(context)
             .setTitle(R.string.first_call_diagnostics_title)
             .setView(scroll)
             .setPositiveButton(android.R.string.ok, null)
@@ -104,9 +124,20 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                 CallDiagnostics.record(context, CallDiagnosticEvent.CLEARED)
                 Toast.makeText(context, R.string.first_call_diagnostics_retry, Toast.LENGTH_LONG).show()
             }
-            .show()
+            .create()
+        val stopObserving = CallDiagnostics.observe(context, ::refresh)
+        stopObservingDiagnostics = stopObserving
+        dialog.setOnDismissListener {
+            stopObserving()
+            if (diagnosticsDialog === dialog) {
+                diagnosticsDialog = null
+                stopObservingDiagnostics = null
+            }
+        }
+        diagnosticsDialog = dialog
+        refresh()
+        dialog.show()
     }
-
     private fun refreshCallPermissions() {
         val root = view ?: return
         val context = requireContext()
