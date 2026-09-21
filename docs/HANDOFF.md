@@ -2,7 +2,14 @@
 
 ## Current goal
 
-D9 removes the Huawei lock-screen Activity route. The next step is user installation and physical verification that the native call UI remains visible while EMUI decides whether to render the silent high-priority notification banner.
+D10 adds a user-authorized accessibility-overlay path for locked first calls. The design specification is ready for user review; no D10 application code has been added yet.
+
+## 2026-09-22 — D10 accessibility-overlay design
+
+- Huawei D9 physical testing and ADB prove the app posts its high-priority silent notification, but EMUI suppresses it behind the native locked incoming-call UI.
+- The approved design uses an explicitly user-enabled accessibility service to own a small, noninteractive `TYPE_ACCESSIBILITY_OVERLAY`; it does not observe screen content, handle events, or control calls.
+- The full design, privacy boundary, fallback behavior and BAC-AL00 acceptance steps are in `docs/superpowers/specs/2026-09-22-accessibility-lock-screen-overlay-design.md`.
+- Await the user's review of that design before writing the implementation plan or application code.
 
 ## 2026-09-21 — D9 activity-free locked heads-up notification
 

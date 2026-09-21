@@ -1,3 +1,15 @@
+## 2026-09-22 — Use a user-enabled accessibility overlay for locked first calls (D10 design)
+
+Huawei BAC-AL00 evidence now rules out the three ordinary app presentation routes:
+an Activity hides the native InCall UI, an application overlay stays below it, and a
+high-importance silent notification is posted but suppressed on that screen. The user
+approved an accessibility-based route after reviewing this evidence.
+
+The planned service is deliberately display-only. It will not retrieve window content,
+listen to or persist accessibility events, perform gestures, filter keys, take screenshots,
+show caller information, or control calls. The user must manually enable it in Android
+Accessibility Settings. See the D10 design specification before implementation.
+
 ## 2026-09-21 — Use an Activity-free heads-up notification on Huawei Keyguard (D9)
 
 ADB evidence from Huawei BAC-AL00 / Android 8 shows that every attempt to start
