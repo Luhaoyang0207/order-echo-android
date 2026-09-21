@@ -31,6 +31,14 @@ internal object FirstCallLockedHint {
                 setSound(null, null)
                 enableVibration(false)
             })
+            when {
+                !notifications.areNotificationsEnabled() ->
+                    CallDiagnostics.record(appContext, CallDiagnosticEvent.LOCKED_HINT_NOTIFICATIONS_BLOCKED)
+                notifications.getNotificationChannel(CHANNEL)?.importance ?: NotificationManager.IMPORTANCE_NONE <
+                    NotificationManager.IMPORTANCE_HIGH ->
+                    CallDiagnostics.record(appContext, CallDiagnosticEvent.LOCKED_HINT_CHANNEL_NOT_HIGH)
+                else -> CallDiagnostics.record(appContext, CallDiagnosticEvent.LOCKED_HINT_CHANNEL_READY)
+            }
             val fullScreenIntent = PendingIntent.getActivity(appContext, NOTIFICATION_ID,
                 Intent(appContext, LockedFirstCallActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),

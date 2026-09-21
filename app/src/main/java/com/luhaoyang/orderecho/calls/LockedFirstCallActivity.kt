@@ -24,6 +24,7 @@ class LockedFirstCallActivity : Activity() {
     @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CallDiagnostics.record(this, CallDiagnosticEvent.LOCKED_ACTIVITY_CREATED)
         window.addFlags(
             WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
@@ -40,6 +41,7 @@ class LockedFirstCallActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
+        CallDiagnostics.record(this, CallDiagnosticEvent.LOCKED_ACTIVITY_STARTED)
         if (!FirstCallLockedHint.isActive()) {
             finishAndRemoveTask()
             return
@@ -50,6 +52,7 @@ class LockedFirstCallActivity : Activity() {
     }
 
     override fun onStop() {
+        CallDiagnostics.record(this, CallDiagnosticEvent.LOCKED_ACTIVITY_STOPPED)
         handler.removeCallbacks(dismiss)
         if (receiverRegistered) {
             unregisterReceiver(dismissReceiver)

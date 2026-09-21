@@ -2,8 +2,27 @@
 
 ## Current goal
 
-D5 lock-screen presentation repair is ready for Huawei installation and physical acceptance. Huawei diagnostics already prove the live RINGING, Call Log lookup and FIRST result; D3's overlay only fails visually under the locked incoming-call screen. D5 keeps the working reception and history lookup and changes only the locked presentation.
+D6 diagnostic build is ready to isolate the remaining Huawei lock-screen presentation block. Huawei evidence proves live RINGING, Call Log lookup, FIRST classification and locked-hint request; it does not yet prove that the full-screen Activity is launched on the Huawei call screen.
 
+## 2026-09-21 — D6 full-screen route diagnostics
+
+### Evidence and change
+
+- The D5 Huawei report proves the service receives `RINGING`, classifies the caller as `HISTORY_FIRST`, posts the locked hint and reaches its 12-second cleanup. The lock-screen photo still shows only Huawei's incoming-call UI.
+- This leaves two distinct possibilities: Huawei never dispatches the notification's full-screen Activity, or it dispatches it but the Huawei call UI covers it. D5 could not distinguish them.
+- D6 adds fixed, number-free diagnostics only. It records whether app notifications are enabled, whether the Android 8 notification channel remains high priority, and `LockedFirstCallActivity` creation, start and stop lifecycle events. No display policy, permission, caller data, sound, vibration or call behavior changes.
+- A new Android instrumentation test first failed before the lifecycle events existed, then passed after their implementation. It verifies that a visibly launched Activity records its create/start events.
+
+### Verification
+
+- The new lifecycle diagnostic test failed before the Activity lifecycle records existed, then passed after the implementation.
+- :app:testDebugUnitTest, debug/release APK builds, Android-test APK build and lintDebug all passed.
+- On the available local Android 35 emulator, the locked-hint test suite passed with three executed tests; the two tests requiring API-26 full-screen/keyguard behavior were explicitly skipped. The D5 API-26 evidence remains the direct verification of the Android 8 notification contract.
+- Delivery APK: `app/build/outputs/apk/debug/OrderEcho-first-call-D6.apk`; SHA256 `39D5B6C44A5B2D328DAE210C4C9598EFBEF132A60EE2D86CA34E92D4810394DF`.
+
+### Next
+
+Cover-install `OrderEcho-first-call-D6.apk`, clear diagnostics, delete all history for one test number and test once while locked. Send the resulting diagnostic screenshot. The D6 acceptance section in `FIRST_CALL_TESTING.md` explains the exact interpretation.
 ## 2026-09-21 — D5 full-screen top caller hint
 
 ### Evidence and change
