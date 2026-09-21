@@ -98,7 +98,7 @@ class IncomingCallService : Service() {
                         finishCall()
                     } else {
                         when (FirstCallPresentation.forKeyguard(FirstCallLockedHint.isLocked(this))) {
-                            FirstCallPresentation.FULL_SCREEN_NOTIFICATION -> {
+                            FirstCallPresentation.HEADS_UP_NOTIFICATION -> {
                                 if (FirstCallLockedHint.show(this)) {
                                     record(CallDiagnosticEvent.LOCKED_HINT_POSTED)
                                     handler.postDelayed(lockedHintTimeout, LOCKED_HINT_TIMEOUT_MS)

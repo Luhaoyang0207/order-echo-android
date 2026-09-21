@@ -2,7 +2,26 @@
 
 ## Current goal
 
-D8 keeps the confirmed lock-screen `第一次来电` visual while leaving the Huawei native call controls visible and usable. The next step is physical Huawei acceptance of input pass-through.
+D9 removes the Huawei lock-screen Activity route. The next step is user installation and physical verification that the native call UI remains visible while EMUI decides whether to render the silent high-priority notification banner.
+
+## 2026-09-21 — D9 activity-free locked heads-up notification
+
+### Evidence and change
+
+- ADB on the connected Huawei BAC-AL00 / Android 8 recorded `moveTaskToBack: com.android.incallui`, followed by `InCallActivity windowsGone` and destruction of its display surface whenever `LockedFirstCallActivity` launched. This explains every D7/D8 outcome: window flags cannot prevent an Activity task transition.
+- D9 removes `LockedFirstCallActivity` from the manifest and deletes its implementation/layout. The locked path posts only the existing high-importance `首次来电识别（锁屏提示）` channel with title `第一次来电`, no caller data, no sound/vibration, no full-screen intent and no content intent.
+- The existing cancellation on answer, hang-up, service destruction and 12-second timeout remains. The unlocked noninteractive overlay remains unchanged.
+- The Android test now verifies the locked notification has neither a full-screen nor content `PendingIntent`, and that cleanup removes it.
+
+### Verification
+
+- `:app:testDebugUnitTest`, Debug/Release APK builds, Android-test APK build and `lintDebug` passed.
+- Physical D9 visual acceptance is pending user installation: confirm the Huawei call Activity stays visible and directly usable, then observe whether EMUI renders the silent high-priority banner.
+- Delivery APK: `dist/OrderEcho-first-call-D9.apk`; SHA256 `660C915B90C373A0E820DD0B3F0254D9EC8801129195CF3C16DD948EADBD04AA`.
+
+### Next
+
+Cover-install D9. With the dedicated lock-screen channel still high priority and silent, lock the Huawei phone and call from a number whose incoming history was deleted. Confirm no `点击返回来电` screen ever appears, the native answer/reject controls work, and record whether the top banner is visible.
 
 ## 2026-09-21 — D8 non-blocking locked hint
 

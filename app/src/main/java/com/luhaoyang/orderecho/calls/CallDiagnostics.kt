@@ -38,7 +38,7 @@ internal enum class CallDiagnosticEvent(val label: String) {
     LOCKED_HINT_POSTED("锁屏：已发出系统首次来电提示"),
     LOCKED_HINT_NOTIFICATIONS_BLOCKED("锁屏提示：系统已关闭本应用通知"),
     LOCKED_HINT_CHANNEL_NOT_HIGH("锁屏提示：通知渠道未处于高优先级"),
-    LOCKED_HINT_CHANNEL_READY("锁屏提示：通知渠道允许全屏提示"),
+    LOCKED_HINT_CHANNEL_READY("锁屏提示：通知渠道允许横幅提示"),
     LOCKED_ACTIVITY_CREATED("锁屏提示页面已创建"),
     LOCKED_ACTIVITY_STARTED("锁屏提示页面已启动"),
     LOCKED_ACTIVITY_STOPPED("锁屏提示页面已停止"),

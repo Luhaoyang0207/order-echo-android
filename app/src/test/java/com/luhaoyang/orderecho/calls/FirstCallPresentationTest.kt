@@ -4,8 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class FirstCallPresentationTest {
-    @Test fun lockedFirstCallsUseOnlyTheFullScreenNotification() {
-        assertEquals(FirstCallPresentation.FULL_SCREEN_NOTIFICATION, FirstCallPresentation.forKeyguard(true))
+    @Test fun lockedFirstCallsUseOnlyTheHeadsUpNotification() {
+        assertEquals(FirstCallPresentation.HEADS_UP_NOTIFICATION, FirstCallPresentation.forKeyguard(true))
     }
 
     @Test fun unlockedFirstCallsKeepTheNonInteractiveOverlay() {

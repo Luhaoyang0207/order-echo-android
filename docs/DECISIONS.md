@@ -1,3 +1,19 @@
+## 2026-09-21 — Use an Activity-free heads-up notification on Huawei Keyguard (D9)
+
+ADB evidence from Huawei BAC-AL00 / Android 8 shows that every attempt to start
+`LockedFirstCallActivity` moves Huawei `InCallActivity` to the background and destroys
+its display surface. Window focus and touch flags do not change that task transition.
+The earlier D8 Activity route is therefore removed rather than adjusted again.
+
+For a locked FIRST result, retain the already user-configured API-26 high-importance
+`首次来电识别（锁屏提示）` channel, but post only a silent public notification titled
+`第一次来电`. It has neither a full-screen nor content `PendingIntent`, so OrderEcho
+starts no Activity and cannot replace the native call task. The existing 12-second,
+answer, hang-up, and service-destruction cancellation paths remain. The unlocked
+non-touchable overlay remains unchanged. If EMUI suppresses this silent heads-up
+notification over its call screen, ordinary app permissions cannot satisfy both
+visibility and preservation of the Huawei call UI; any Accessibility-based alternative
+requires separate user approval.
 ## 2026-09-21 — Locked hint must not take input focus or touches (D8)
 
 Huawei physical-device evidence showed that the D7 high-priority full-screen notification

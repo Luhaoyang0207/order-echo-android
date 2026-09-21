@@ -1,12 +1,12 @@
 package com.luhaoyang.orderecho.calls
 
-/** Selects one presentation only; system call UI can cover ordinary overlays on Keyguard. */
+/** Selects one presentation only; Keyguard can cover ordinary app overlays. */
 internal enum class FirstCallPresentation {
     OVERLAY,
-    FULL_SCREEN_NOTIFICATION;
+    HEADS_UP_NOTIFICATION;
 
     companion object {
         fun forKeyguard(isLocked: Boolean): FirstCallPresentation =
-            if (isLocked) FULL_SCREEN_NOTIFICATION else OVERLAY
+            if (isLocked) HEADS_UP_NOTIFICATION else OVERLAY
     }
 }
