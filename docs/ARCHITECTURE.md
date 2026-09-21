@@ -99,3 +99,17 @@ current work immediately. No listener polling, caller persistence or new permiss
 MY_PACKAGE_REPLACED; MainActivity resume retries an enabled choice. All paths check
 permissions; START_STICKY restoration is best effort. This updates the older
 manifest-only/short-service-only description above; cleanup boot behavior is unchanged.
+'## Huawei lock-screen presentation correction (2026-09-21)
+
+Physical Huawei testing confirms that the existing overlay is visible for an unlocked
+first caller but is covered by the locked incoming-call screen. The identity and
+history pipeline still reaches FIRST and successfully attaches the overlay; the
+failure is window layering, not number matching or Call Log lookup.
+
+After the existing FIRST, permission and live-RINGING checks, `IncomingCallService`
+selects exactly one presentation. A locked device uses `FirstCallLockedHint`, which posts
+one silent, high-priority, public system notification titled `第一次来电`, with no number
+or other customer data; it never creates an app overlay for that call. The notification
+is cancelled on answer, hang-up, service shutdown or a 12-second display timeout. The
+normal non-touchable TYPE_APPLICATION_OVERLAY remains the unlocked presentation.
+'

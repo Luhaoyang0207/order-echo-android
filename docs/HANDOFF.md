@@ -2,6 +2,30 @@
 
 ## Current goal
 
+D4 lock-screen presentation repair is ready for Huawei installation and physical acceptance. The user confirmed D3 identifies and displays fresh callers while unlocked, but D3's overlay is hidden when the same call arrives with the phone locked. D4 keeps the working runtime reception and history lookup, then changes only the locked presentation.
+
+## 2026-09-21 — D4 lock-screen caller hint
+
+### Evidence and change
+
+- Huawei user testing isolates the failure: a fresh number displays `第一次来电` unlocked, but not locked. Earlier real-customer diagnostics reached `HISTORY_FIRST` and `OVERLAY_ADDED`, so classification and service startup are working.
+- An API-26 `FLAG_SHOW_WHEN_LOCKED` overlay probe was still visually hidden behind Keyguard. A Toast was hidden too. Both probes were removed instead of shipped.
+- Added `FirstCallLockedHint` and an explicit presentation choice after the existing FIRST/permission/live-RINGING checks. A locked call posts one silent, high-priority Android notification titled `第一次来电`; it has no number, no content text, no intent and no call controls. That branch does not create an overlay. The existing non-touchable overlay remains the unlocked presentation.
+- The notification is cancelled on answer, hang-up, service shutdown or a 12-second display timeout. Debug diagnostics record fixed events only and never store a caller number.
+- Files: new `calls/FirstCallLockedHint.kt`, `calls/FirstCallPresentation.kt`, `FirstCallLockedHintTest.kt` and `FirstCallPresentationTest.kt`; changed `IncomingCallService.kt`, `CallDiagnostics.kt`, `IncomingCallServiceTest.kt`, diagnostic label, README, ARCHITECTURE, DECISIONS, FIRST_CALL_TESTING and this HANDOFF.
+
+### Verification
+
+- Full final verification passed: 61 unit tests, Debug/Android-test/Release APK builds, and debug lint (zero errors; existing deprecation warnings only).
+- API-26 emulator: all three `FirstCallSettingsTest` methods passed; `CallMonitoringTest`, `CallDiagnosticsTest` and `FirstCallOverlayManagerTest` passed (6 tests). `FirstCallLockedHintTest` passed with `isStatusBarKeyguard=true`. An isolated emulated GSM call passed `IncomingCallServiceTest`, including the regression that the displayed locked-screen hint disappears when the service finishes.
+- Delivery APK: `app/build/outputs/apk/debug/OrderEcho-first-call-D4.apk`; SHA256 `96459709790964601BC88FFBBEEF7AAC7727CA27B3CEA0D44E01B1DC3EA9D2EC`.
+
+### Next
+
+Cover-install D4, retain existing permissions and the enabled monitoring switch, then test a fresh number while the phone is locked. Confirm App notifications are allowed if the system hint is absent; send the D4 diagnostic report if needed.
+
+## Current goal
+
 D3 runtime-reception fix is ready for Huawei installation and physical acceptance. D2 photos prove runtime PHONE_STATE and default/SIM1 callbacks deliver ringing with a number while the original manifest receiver remains silent. Production now offers opt-in foreground runtime monitoring; emulator end-to-end verification passed with the original receiver disabled. Actual Huawei first-caller overlay visibility/reliability remains to be confirmed. Recording filesystem follow-up stays separate.
 
 ## 2026-09-19 — D3 runtime reception fix

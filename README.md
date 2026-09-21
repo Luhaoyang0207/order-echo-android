@@ -119,9 +119,9 @@ The current version scans files on the main thread during startup cleanup, refre
 
 ## 首次来电识别 / First incoming caller hint
 
-系统历史通话中没有该号码以前的接听、未接、拒接或拦截来电时，响铃期间在屏幕顶部显示「第一次来电」。拨出记录不算历史来电。唯一来源是本机系统 Call Log，没有客户数据库、号码持久化、联系人查询或网络。
+系统历史通话中没有该号码以前的接听、未接、拒接或拦截来电时，响铃期间显示「第一次来电」。解锁时显示在屏幕顶部；锁屏时改由系统显示无号码的提示通知。拨出记录不算历史来电。唯一来源是本机系统 Call Log，没有客户数据库、号码持久化、联系人查询或网络。
 
-When the local system Call Log contains no earlier incoming, missed, rejected or blocked call from a number, a small `第一次来电` hint appears near the top while ringing. Outgoing-only history does not count. There is no customer database, stored phone-number list, contact lookup or network access.
+When the local system Call Log contains no earlier incoming, missed, rejected or blocked call from a number, a `第一次来电` hint appears while ringing. It is an overlay near the top when unlocked, or a number-free system notification when locked. Outgoing-only history does not count. There is no customer database, stored phone-number list, contact lookup or network access.
 
 安装或从 D1/D2 升级后，在「设置」允许电话、通话记录、悬浮窗权限，再点击「开启来电识别」。开关默认关闭。华为 EMUI 8 还需允许自启动、关联启动、后台运行，并放宽电池优化。开启后在通知栏保留「来电识别已开启」通知；可从设置或通知栏关闭。普通重启解锁或覆盖更新后会按已保存的开关尝试恢复，仍受系统限制；手动强行停止后需要打开一次。
 

@@ -1,3 +1,17 @@
+## 2026-09-21 — Use a silent system notification on the locked call screen (D4)
+
+The user confirmed on Huawei BAC-AL00 that a FIRST result and overlay are visible
+when unlocked, while the same fresh-number call is not visible when locked. The D3
+diagnostic photos also show HISTORY_FIRST and accepted overlay creation for real
+customer calls. This isolates the fault to the keyguard/call-screen window layer.
+
+`TYPE_APPLICATION_OVERLAY` cannot safely take priority over that system layer. An
+API-26 locked-emulator check also showed an accepted overlay hidden behind Keyguard;
+a Toast was hidden as well. Keep the existing overlay for unlocked calls. For a
+locked FIRST result, use a silent, high-priority, public Android notification titled
+`第一次来电`; it contains no caller number, starts no Activity and never changes the
+phone call. Cancel it on the existing terminal lifecycle events. No permission,
+dependency, account, network, number storage or dialer integration is added.
 # Decisions
 
 ## 2026-09-19 — Enable foreground runtime reception on Huawei (D3)

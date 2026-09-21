@@ -35,6 +35,8 @@ internal enum class CallDiagnosticEvent(val label: String) {
     HISTORY_UNKNOWN("无法完成通话记录查询"),
     RESULT_IGNORED("查询结果已过期或已处理"),
     OVERLAY_ADDED("系统已接受来电悬浮窗；是否可见需目视确认"),
+    LOCKED_HINT_POSTED("锁屏：已发出系统首次来电提示"),
+    LOCKED_HINT_TIMEOUT("锁屏首次提示达到显示时限，已移除"),
     OVERLAY_FAILED("来电悬浮窗添加失败"),
     OVERLAY_TIMEOUT("来电悬浮窗达到显示时限，已移除"),
     OVERLAY_REMOVED("来电悬浮窗已移除"),

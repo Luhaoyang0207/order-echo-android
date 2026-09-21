@@ -28,6 +28,10 @@ class IncomingCallService : Service() {
     private var destroyed = false
     private var latestStartId = 0
     private val deadline = Runnable { record(CallDiagnosticEvent.DEADLINE); finishCall() }
+    private val lockedHintTimeout = Runnable {
+        record(CallDiagnosticEvent.LOCKED_HINT_TIMEOUT)
+        finishCall()
+    }
     private val checkState = object : Runnable {
         override fun run() {
             if (request == null) return
@@ -90,8 +94,20 @@ class IncomingCallService : Service() {
                         HistoryResult.PREVIOUS -> "Previous incoming call found"
                         HistoryResult.UNKNOWN -> "Call history unavailable"
                     })
-                    if (!show || !permissionsReady() || !isStillRinging() || !showOverlay()) {
+                    if (!show || !permissionsReady() || !isStillRinging()) {
                         finishCall()
+                    } else {
+                        when (FirstCallPresentation.forKeyguard(FirstCallLockedHint.isLocked(this))) {
+                            FirstCallPresentation.SYSTEM_NOTIFICATION -> {
+                                if (FirstCallLockedHint.show(this)) {
+                                    record(CallDiagnosticEvent.LOCKED_HINT_POSTED)
+                                    handler.postDelayed(lockedHintTimeout, LOCKED_HINT_TIMEOUT_MS)
+                                } else {
+                                    finishCall()
+                                }
+                            }
+                            FirstCallPresentation.OVERLAY -> if (!showOverlay()) finishCall()
+                        }
                     }
                 }
             }
@@ -103,6 +119,7 @@ class IncomingCallService : Service() {
         request?.let(IncomingCalls.session::dismiss)
         request = null
         clearWork()
+        FirstCallLockedHint.hide(this)
         stopForeground(STOP_FOREGROUND_REMOVE)
         // Do not stop a newer start which Android has queued but not delivered yet.
         stopSelfResult(latestStartId)
@@ -166,6 +183,7 @@ class IncomingCallService : Service() {
         request?.let(IncomingCalls.session::dismiss)
         request = null
         clearWork()
+        FirstCallLockedHint.hide(this)
         executor.shutdownNow()
         if (IncomingCalls.service === this) IncomingCalls.service = null
         super.onDestroy()
@@ -176,6 +194,7 @@ class IncomingCallService : Service() {
     companion object {
         private const val CHANNEL = "first-call-check"
         private const val NOTIFICATION_ID = 101
+        private const val LOCKED_HINT_TIMEOUT_MS = 12_000L
         private const val NUMBER = "number"
         private const val TOKEN = "token"
         private const val BEFORE = "before"
