@@ -23,6 +23,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".calls.LockedFirstCallActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:theme="@style/Theme.OrderEcho.LockedFirstCallHint" />
         <service
             android:name=".calls.IncomingCallService"
             android:exported="false" />

@@ -1,3 +1,18 @@
+## 2026-09-21 — Launch a small top Activity from a full-screen notification (D5)
+
+D4 reached Huawei's locked notification route but the customer's device still hid its
+silent notification. The user then explicitly authorized a focused and touchable
+window, provided it remains small and does not cover Huawei's answer or hang-up
+controls.
+
+For a locked FIRST result only, post a silent public API-26 high-importance
+notification with a full-screen `PendingIntent` for `LockedFirstCallActivity`. The
+Activity uses the legacy API-26 show-when-locked flags and is a small top-centred
+dialog that contains only `第一次来电`. It has no caller number, no other customer data,
+no sound and no vibration. It is cancelled and closed on answer, hang-up, service
+shutdown or a 12-second timeout. The existing non-touchable overlay remains the sole
+unlocked presentation. The focused Activity is intentionally restricted to the small
+label area so native call controls remain outside it.
 ## 2026-09-21 — Use a silent system notification on the locked call screen (D4)
 
 The user confirmed on Huawei BAC-AL00 that a FIRST result and overlay are visible

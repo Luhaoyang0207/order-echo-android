@@ -2,8 +2,27 @@
 
 ## Current goal
 
-D4 lock-screen presentation repair is ready for Huawei installation and physical acceptance. The user confirmed D3 identifies and displays fresh callers while unlocked, but D3's overlay is hidden when the same call arrives with the phone locked. D4 keeps the working runtime reception and history lookup, then changes only the locked presentation.
+D5 lock-screen presentation repair is ready for Huawei installation and physical acceptance. Huawei diagnostics already prove the live RINGING, Call Log lookup and FIRST result; D3's overlay only fails visually under the locked incoming-call screen. D5 keeps the working reception and history lookup and changes only the locked presentation.
 
+## 2026-09-21 — D5 full-screen top caller hint
+
+### Evidence and change
+
+- D4 diagnostics on the Huawei device showed a locked fresh call reaches `RINGING`, finds no prior inbound call, and requests the system hint, but Huawei still makes the silent notification invisible.
+- With the user's explicit approval, the locked path now posts a silent Android 8 full-screen notification that launches `LockedFirstCallActivity`. It is a small top-centred focused/touchable dialog with only `第一次来电`; it contains no number or other customer information and has no sound or vibration.
+- The Activity is only selected while Keyguard is locked. Unlocked calls still use the working non-touchable overlay. The notification and Activity close on answer, hang-up, service shutdown or the 12-second deadline. The small window avoids the lower Huawei native call controls.
+- Files: new `calls/LockedFirstCallActivity.kt` and its layout; changed `FirstCallLockedHint`, `FirstCallPresentation`, `IncomingCallService`, manifest/theme, locked-hint and presentation tests, README, ARCHITECTURE, DECISIONS, FIRST_CALL_TESTING and this HANDOFF.
+
+### Verification
+
+- Full Gradle verification passed: unit tests, Debug/Release APK builds, Android-test APK build and `lintDebug`.
+- On an Android 8/API-26 emulator, the locked-hint instrumentation suite passed: the Activity visibly rendered only the top-quarter label, the notification contained a full-screen intent, and `hide()` removed the visible Activity. The test that requires actual Keyguard was skipped because this isolated emulator lacks a functioning Gatekeeper/secure-lock service.
+- The local emulator cannot present a real GSM incoming-call UI or perform native accept/hang-up actions. Huawei physical-device acceptance remains required for the exact locked-call visual layer and native controls.
+- Delivery APK: `app/build/outputs/apk/debug/OrderEcho-first-call-D5.apk`; SHA256 `11619125C3AEAE0770A108681CEBCEAC9A00ABAA71E468D93C5C02EE414645BD`.
+
+### Next
+
+Cover-install `OrderEcho-first-call-D5.apk`, keep monitoring and notifications enabled, delete all history for a test number, lock the phone and call it. Confirm the small top label is visible and Huawei's lower accept/hang-up buttons work and close it. Send a locked-call photo plus the D5 diagnostic page if it does not.
 ## 2026-09-21 — D4 lock-screen caller hint
 
 ### Evidence and change
