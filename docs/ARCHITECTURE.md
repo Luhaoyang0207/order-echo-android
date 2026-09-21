@@ -110,8 +110,8 @@ After the existing FIRST, permission and live-RINGING checks, `IncomingCallServi
 selects exactly one presentation. An unlocked device uses the normal non-touchable
 `TYPE_APPLICATION_OVERLAY`. A locked device uses `FirstCallLockedHint`: a silent,
 high-priority, public Android notification with a full-screen intent opens
-`LockedFirstCallActivity`. That Activity is a small, top-centred, focused and touchable
-window containing only `第一次来电`; it deliberately avoids the lower native call controls.
+`LockedFirstCallActivity`. That Activity is a small, top-centred, transparent, non-focusable and non-touchable
+window containing only `第一次来电`. Touches and key input pass through to the Huawei call window below it.
 It contains no number or other customer data and adds no sound or vibration. Answer,
 hang-up, service shutdown and the 12-second timeout cancel the notification and close
 the Activity.

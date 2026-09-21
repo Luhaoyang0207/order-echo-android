@@ -3,9 +3,13 @@ package com.luhaoyang.orderecho.calls
 import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import android.view.WindowManager
+import android.widget.TextView
+import androidx.test.core.app.ActivityScenario
 import com.luhaoyang.orderecho.R
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -21,40 +25,62 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class FirstCallLockedHintTest {
+    @Test fun lockedHintWindowLeavesFocusAndTouchesToThePhoneWindow() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        try {
+            instrumentation.runOnMainSync { FirstCallLockedHint.show(context) }
+            ActivityScenario.launch<LockedFirstCallActivity>(
+                Intent(context, LockedFirstCallActivity::class.java)
+            ).use { scenario ->
+                scenario.onActivity { activity ->
+                    val flags = activity.window.attributes.flags
+                    assertTrue(flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE != 0)
+                    assertTrue(flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE != 0)
+                }
+            }
+        } finally {
+            instrumentation.runOnMainSync { FirstCallLockedHint.hide(context) }
+        }
+    }
+
     @Test fun firstCallHintUsesTheFullScreenRouteWhileKeyguardIsShowing() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
         val keyguard = context.getSystemService(KeyguardManager::class.java)
         assumeTrue("Run this check with the test device locked", keyguard.isKeyguardLocked)
-
+        val preferences = context.getSharedPreferences("first_call_diagnostics", 0)
+        val original = preferences.getString("events", null)
         try {
+            CallDiagnostics.clear(context)
             instrumentation.runOnMainSync { FirstCallLockedHint.show(context) }
-            assertTrue(
-                UiDevice.getInstance(instrumentation).wait(Until.hasObject(By.text("第一次来电")), 5_000L)
-            )
+            assertTrue(waitForDiagnostic(context, "锁屏提示页面已启动"))
         } finally {
             instrumentation.runOnMainSync { FirstCallLockedHint.hide(context) }
+            preferences.edit().putString("events", original).commit()
         }
     }
+
     @Test fun fullScreenHintActivityRendersOnlyTheFirstCallLabel() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
         try {
-            instrumentation.runOnMainSync {
-                FirstCallLockedHint.show(context)
-                context.startActivity(Intent().setClassName(context.packageName,
-                    "com.luhaoyang.orderecho.calls.LockedFirstCallActivity")
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            instrumentation.runOnMainSync { FirstCallLockedHint.show(context) }
+            ActivityScenario.launch<LockedFirstCallActivity>(
+                Intent(context, LockedFirstCallActivity::class.java)
+            ).use { scenario ->
+                scenario.onActivity { activity ->
+                    val label = activity.findViewById<TextView>(R.id.locked_first_call_hint)
+                    val location = IntArray(2)
+                    label.getLocationOnScreen(location)
+                    assertTrue(label.isShown)
+                    assertEquals(context.getString(R.string.first_call_label), label.text)
+                    assertTrue(
+                        "The hint must remain in the top quarter, away from call controls",
+                        location[1] + label.height < activity.resources.displayMetrics.heightPixels / 4
+                    )
+                }
             }
-            val device = UiDevice.getInstance(instrumentation)
-            assertTrue(device.wait(
-                Until.hasObject(By.res(context.packageName, "locked_first_call_hint")), 5_000L
-            ))
-            assertTrue(
-                "The hint must remain in the top quarter, away from call controls",
-                device.findObject(By.res(context.packageName, "locked_first_call_hint")).visibleBounds.bottom <
-                    device.displayHeight / 4
-            )
         } finally {
             instrumentation.runOnMainSync { FirstCallLockedHint.hide(context) }
         }
@@ -80,22 +106,23 @@ class FirstCallLockedHintTest {
     @Test fun hidingTheHintClosesItsVisibleActivity() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
-        val device = UiDevice.getInstance(instrumentation)
+        val preferences = context.getSharedPreferences("first_call_diagnostics", 0)
+        val original = preferences.getString("events", null)
         try {
+            CallDiagnostics.clear(context)
             instrumentation.runOnMainSync {
                 FirstCallLockedHint.show(context)
-                context.startActivity(Intent().setClassName(context.packageName,
-                    "com.luhaoyang.orderecho.calls.LockedFirstCallActivity")
+                context.startActivity(Intent(context, LockedFirstCallActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }
-            assertTrue(device.wait(Until.hasObject(By.res(context.packageName, "locked_first_call_hint")), 5_000L))
+            assertTrue(waitForDiagnostic(context, "锁屏提示页面已启动"))
             instrumentation.runOnMainSync { FirstCallLockedHint.hide(context) }
-            assertTrue(device.wait(Until.gone(By.res(context.packageName, "locked_first_call_hint")), 5_000L))
+            assertTrue(waitForDiagnostic(context, "锁屏提示页面已停止"))
         } finally {
             instrumentation.runOnMainSync { FirstCallLockedHint.hide(context) }
+            preferences.edit().putString("events", original).commit()
         }
     }
-
     @Test fun lockedHintSettingsIntentTargetsOnlyItsChannel() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = FirstCallLockedHint.notificationSettingsIntent(context)
@@ -123,18 +150,22 @@ class FirstCallLockedHintTest {
             CallDiagnostics.clear(context)
             instrumentation.runOnMainSync {
                 FirstCallLockedHint.show(context)
-                context.startActivity(Intent().setClassName(context.packageName,
-                    "com.luhaoyang.orderecho.calls.LockedFirstCallActivity")
+                context.startActivity(Intent(context, LockedFirstCallActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }
-            assertTrue(UiDevice.getInstance(instrumentation).wait(
-                Until.hasObject(By.res(context.packageName, "locked_first_call_hint")), 5_000L
-            ))
-            assertTrue(CallDiagnostics.report(context).contains("锁屏提示页面已创建"))
-            assertTrue(CallDiagnostics.report(context).contains("锁屏提示页面已启动"))
+            assertTrue(waitForDiagnostic(context, "锁屏提示页面已创建"))
+            assertTrue(waitForDiagnostic(context, "锁屏提示页面已启动"))
         } finally {
             instrumentation.runOnMainSync { FirstCallLockedHint.hide(context) }
             preferences.edit().putString("events", original).commit()
         }
+    }
+
+    private fun waitForDiagnostic(context: Context, text: String): Boolean {
+        repeat(20) {
+            if (CallDiagnostics.report(context).contains(text)) return true
+            Thread.sleep(250L)
+        }
+        return false
     }
 }

@@ -1,3 +1,15 @@
+## 2026-09-21 — Locked hint must not take input focus or touches (D8)
+
+Huawei physical-device evidence showed that the D7 high-priority full-screen notification
+successfully launches `LockedFirstCallActivity`, but its Activity task hides the native call
+controls behind a “return to call” affordance. The display path is therefore proven, while the
+focused/touchable configuration is unacceptable.
+
+Keep the silent, number-free API-26 full-screen route only for Keyguard, but make the Activity
+window translucent, non-focusable and non-touchable. The Activity remains a small top-centred
+label while Android routes key input and touch input to the Huawei call window beneath it. This
+preserves visible locked-screen identification without adding sound, vibration, caller data or
+call control. The unlocked overlay remains unchanged.
 ## 2026-09-21 — Treat Huawei notification-channel priority as a full-screen prerequisite (D6 evidence)
 
 The Huawei D6 report records `LOCKED_HINT_CHANNEL_NOT_HIGH` immediately before the

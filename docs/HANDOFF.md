@@ -2,7 +2,26 @@
 
 ## Current goal
 
-D7 provides a direct path to the exact Huawei notification channel that blocked the locked full-screen Activity. The user needs to inspect whether EMUI can keep that channel high priority without adding sound or vibration.
+D8 keeps the confirmed lock-screen `第一次来电` visual while leaving the Huawei native call controls visible and usable. The next step is physical Huawei acceptance of input pass-through.
+
+## 2026-09-21 — D8 non-blocking locked hint
+
+### Evidence and change
+
+- The Huawei D7 photos prove the high-priority channel now displays `第一次来电`, but the launched Activity puts the call UI behind a `点击返回来电` screen. The original focused/touchable Activity therefore blocks the native call experience.
+- `LockedFirstCallActivity` is now a transparent, small top-centred Activity with `FLAG_NOT_FOCUSABLE`, `FLAG_NOT_TOUCHABLE` and `FLAG_NOT_TOUCH_MODAL`. Android sends its key and pointer input to the Huawei Phone window below, while the label remains visible.
+- The lock-screen-only full-screen notification route, 12-second cleanup, no-number rule, silence/vibration settings and unlocked overlay path are unchanged.
+- The new regression test was observed failing before these flags existed, then passing after the change. Existing visual/lifecycle tests now inspect the non-focusable Activity's own layout and lifecycle rather than asking UIAutomator to discover a window intentionally excluded from input focus.
+
+### Verification
+
+- `:app:testDebugUnitTest`, Debug/Release APK builds, Android-test APK build and `lintDebug` passed.
+- On the local Android 35 emulator, the complete `FirstCallLockedHintTest` class passed: six executed tests and two expected API-26/keyguard skips. It verifies the label layout, lifecycle cleanup, dedicated channel, settings intent, and focus/touch pass-through flags.
+- Delivery APK: `app/build/outputs/apk/debug/OrderEcho-first-call-D8.apk`; SHA256 `81A0E27813AA415E4ACB225CA5A098B0746991B22EA0BA72B727E82B69FDBB2A`.
+
+### Next
+
+Cover-install `OrderEcho-first-call-D8.apk`. With the phone locked, call from a number whose incoming history was deleted. Confirm `第一次来电` stays at the top while Huawei's number, answer, reject/hang-up, SMS and reminder controls remain visible and directly usable, without tapping `点击返回来电`.
 
 ## 2026-09-21 — D7 direct locked-hint channel settings
 

@@ -127,9 +127,9 @@ When the local system Call Log contains no earlier incoming, missed, rejected or
 
 After installation or upgrading from D1/D2, grant Phone, Call Log and Display over other apps, then tap Enable call identification in Settings. The switch defaults off. An ongoing generic notification keeps runtime reception active; Settings and the notification both offer Stop. Allow EMUI auto/secondary/background launch and battery exceptions. Boot after unlock and app updates attempt to restore the saved enabled choice, subject to system restrictions; force-stop requires reopening the app.
 
-后台监听使用常驻前台服务；来电查询和显示另外使用短时前台服务，其工作通知完成后自动关闭。所有通知均不含号码。解锁时的悬浮窗不接收触摸、不抢焦点；锁屏时仅出现可触摸的小型顶部窗口。两者都会在接听、挂断或最多 12 秒后移除。旧号码不会显示首次悬浮提示。
+后台监听使用常驻前台服务；来电查询和显示另外使用短时前台服务，其工作通知完成后自动关闭。所有通知均不含号码。解锁时的悬浮窗不接收触摸、不抢焦点；锁屏时仅出现透明、不可获取焦点且不接收触摸的小型顶部窗口；华为原生接听和挂断操作保留。两者都会在接听、挂断或最多 12 秒后移除。旧号码不会显示首次悬浮提示。
 
-A persistent foreground service owns runtime reception. A separate short-lived foreground service shows a generic notification during lookup/display; neither notification contains a caller number. The unlocked overlay is non-touchable and non-focusable. The locked route is a small touchable top window; both disappear on answer/end and last at most 12 seconds. Returning callers do not get the first-caller overlay.
+A persistent foreground service owns runtime reception. A separate short-lived foreground service shows a generic notification during lookup/display; neither notification contains a caller number. The unlocked overlay is non-touchable and non-focusable. The locked route is a transparent, non-focusable and non-touchable top window, so Huawei call controls remain available; both disappear on answer/end and last at most 12 seconds. Returning callers do not get the first-caller overlay.
 
 按第一条 RINGING 的接收时间减 5 秒查询历史，重复事件不移动边界。挪威八位本地、`+47` 和 `0047` 格式可匹配。权限或查询异常、未知号码不显示。由于系统不提供精确通话 ID/开始时间，异常广播延迟、五秒内快速重拨、未落库记录及系统历史删除有明确限制。锁屏、EMUI 杀后台和双卡/通话等待须真机验证，不承诺突破系统限制。
 

@@ -27,7 +27,10 @@ class LockedFirstCallActivity : Activity() {
         CallDiagnostics.record(this, CallDiagnosticEvent.LOCKED_ACTIVITY_CREATED)
         window.addFlags(
             WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
         )
         if (!FirstCallLockedHint.isActive()) {
             finishAndRemoveTask()
