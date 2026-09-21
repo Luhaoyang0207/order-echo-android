@@ -1,3 +1,16 @@
+## 2026-09-21 — Treat Huawei notification-channel priority as a full-screen prerequisite (D6 evidence)
+
+The Huawei D6 report records `LOCKED_HINT_CHANNEL_NOT_HIGH` immediately before the
+full-screen notification is posted, with no Activity create or start event. This is
+not an overlay or layout failure: the system never dispatched the full-screen
+`PendingIntent`.
+
+On Android 8, full-screen intents require a high-importance notification channel;
+channel behavior is ultimately controlled by the system and user settings. Keep the
+implementation silent and number-free as required. Do not add a notification sound or
+vibration merely to force an interruption. The remaining supported route is to inspect
+and, if available, enable high-priority / banner presentation for the dedicated
+`首次来电识别` notification channel on the Huawei device.
 ## 2026-09-21 — Launch a small top Activity from a full-screen notification (D5)
 
 D4 reached Huawei's locked notification route but the customer's device still hid its

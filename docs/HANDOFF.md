@@ -9,7 +9,8 @@ D6 diagnostic build is ready to isolate the remaining Huawei lock-screen present
 ### Evidence and change
 
 - The D5 Huawei report proves the service receives `RINGING`, classifies the caller as `HISTORY_FIRST`, posts the locked hint and reaches its 12-second cleanup. The lock-screen photo still shows only Huawei's incoming-call UI.
-- This leaves two distinct possibilities: Huawei never dispatches the notification's full-screen Activity, or it dispatches it but the Huawei call UI covers it. D5 could not distinguish them.
+- D6 Huawei evidence now identifies the blocking boundary: `LOCKED_HINT_CHANNEL_NOT_HIGH` was recorded, while neither `LOCKED_ACTIVITY_CREATED` nor `LOCKED_ACTIVITY_STARTED` was recorded. Huawei therefore did not dispatch the full-screen Activity because the hint channel is not high priority.
+- D5 could not distinguish whether Huawei withheld the Activity or covered it with the call UI. D6 resolves that ambiguity: the Activity was not dispatched because the channel is not high priority.
 - D6 adds fixed, number-free diagnostics only. It records whether app notifications are enabled, whether the Android 8 notification channel remains high priority, and `LockedFirstCallActivity` creation, start and stop lifecycle events. No display policy, permission, caller data, sound, vibration or call behavior changes.
 - A new Android instrumentation test first failed before the lifecycle events existed, then passed after their implementation. It verifies that a visibly launched Activity records its create/start events.
 
