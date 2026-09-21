@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.provider.Settings
 import com.luhaoyang.orderecho.R
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -24,13 +25,7 @@ internal object FirstCallLockedHint {
         active.set(true)
         return try {
             val notifications = appContext.getSystemService(NotificationManager::class.java)
-            notifications.createNotificationChannel(NotificationChannel(
-                CHANNEL, appContext.getString(R.string.first_call_title), NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                setLockscreenVisibility(Notification.VISIBILITY_PUBLIC)
-                setSound(null, null)
-                enableVibration(false)
-            })
+            ensureChannel(appContext, notifications)
             when {
                 !notifications.areNotificationsEnabled() ->
                     CallDiagnostics.record(appContext, CallDiagnosticEvent.LOCKED_HINT_NOTIFICATIONS_BLOCKED)
@@ -59,6 +54,24 @@ internal object FirstCallLockedHint {
         }
     }
 
+    /** Opens the exact Android 8 channel used for the locked full-screen hint. */
+    fun notificationSettingsIntent(context: Context): Intent {
+        val appContext = context.applicationContext
+        ensureChannel(appContext, appContext.getSystemService(NotificationManager::class.java))
+        return Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+            .putExtra(Settings.EXTRA_APP_PACKAGE, appContext.packageName)
+            .putExtra(Settings.EXTRA_CHANNEL_ID, CHANNEL)
+    }
+
+    private fun ensureChannel(context: Context, notifications: NotificationManager) {
+        notifications.createNotificationChannel(NotificationChannel(
+            CHANNEL, context.getString(R.string.first_call_locked_hint_channel_title), NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            setLockscreenVisibility(Notification.VISIBILITY_PUBLIC)
+            setSound(null, null)
+            enableVibration(false)
+        })
+    }
     fun hide(context: Context) {
         val appContext = context.applicationContext
         active.set(false)

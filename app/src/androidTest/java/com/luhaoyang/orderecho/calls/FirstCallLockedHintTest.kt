@@ -5,12 +5,14 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.content.Intent
 import android.os.Build
+import android.provider.Settings
 import com.luhaoyang.orderecho.R
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -94,6 +96,24 @@ class FirstCallLockedHintTest {
         }
     }
 
+    @Test fun lockedHintSettingsIntentTargetsOnlyItsChannel() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = FirstCallLockedHint.notificationSettingsIntent(context)
+        assertEquals(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS, intent.action)
+        assertEquals(context.packageName, intent.getStringExtra(Settings.EXTRA_APP_PACKAGE))
+        assertEquals("first-call-locked-full-screen-hint", intent.getStringExtra(Settings.EXTRA_CHANNEL_ID))
+    }
+    @Test fun lockedHintUsesItsOwnNamedNotificationChannel() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        try {
+            instrumentation.runOnMainSync { assertTrue(FirstCallLockedHint.show(context)) }
+            val manager = context.getSystemService(NotificationManager::class.java)
+            assertTrue(manager.notificationChannels.any { it.name == "首次来电识别（锁屏提示）" })
+        } finally {
+            instrumentation.runOnMainSync { FirstCallLockedHint.hide(context) }
+        }
+    }
     @Test fun visibleLockedHintActivityRecordsItsLaunch() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext

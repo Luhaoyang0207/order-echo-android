@@ -10,6 +10,7 @@ import com.luhaoyang.orderecho.calls.CallMonitoring
 import com.luhaoyang.orderecho.calls.CallDiagnostics
 import com.luhaoyang.orderecho.calls.CallDiagnosticEvent
 import com.luhaoyang.orderecho.calls.FirstCallOverlayManager
+import com.luhaoyang.orderecho.calls.FirstCallLockedHint
 import com.luhaoyang.orderecho.calls.FirstCallPermissions
 import android.os.Bundle
 import android.view.View
@@ -60,6 +61,9 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         }
         view.findViewById<Button>(R.id.first_call_app_settings).setOnClickListener {
             openPermissionSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        }
+        view.findViewById<Button>(R.id.locked_hint_notification_settings).setOnClickListener {
+            openLockedHintNotificationSettings()
         }
         view.findViewById<Button>(R.id.toggle_call_monitor).setOnClickListener {
             if (CallMonitoring.isEnabled(requireContext())) {
@@ -177,6 +181,13 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         }
     }
 
+    private fun openLockedHintNotificationSettings() {
+        try {
+            startActivity(FirstCallLockedHint.notificationSettingsIntent(requireContext()))
+        } catch (_: RuntimeException) {
+            openPermissionSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        }
+    }
     private fun openPermissionSettings(action: String) {
         val uri = Uri.fromParts("package", requireContext().packageName, null)
         try {

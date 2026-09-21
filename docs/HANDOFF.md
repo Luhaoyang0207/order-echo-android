@@ -2,8 +2,26 @@
 
 ## Current goal
 
-D6 diagnostic build is ready to isolate the remaining Huawei lock-screen presentation block. Huawei evidence proves live RINGING, Call Log lookup, FIRST classification and locked-hint request; it does not yet prove that the full-screen Activity is launched on the Huawei call screen.
+D7 provides a direct path to the exact Huawei notification channel that blocked the locked full-screen Activity. The user needs to inspect whether EMUI can keep that channel high priority without adding sound or vibration.
 
+## 2026-09-21 — D7 direct locked-hint channel settings
+
+### Evidence and change
+
+- Huawei's Notification Manager contains three categories all named `首次来电识别`: the short-lived lookup service, the obsolete D4 lock hint, and the D5/D6 locked full-screen hint. EMUI does not expose their internal IDs, so the user cannot reliably select the right category.
+- The current locked hint channel now has the distinct visible name `首次来电识别（锁屏提示）`. Android permits an app to rename an existing channel without changing its ID or resetting its user-controlled behavior.
+- Settings now has `打开锁屏提示通知设置`. It creates/renames the current channel then opens Android's channel-specific settings intent for `first-call-locked-full-screen-hint`; a device that does not support that intent falls back to the app's settings page.
+- No caller data, recording behavior, call handling, sound or vibration changed. The new test confirms both the distinct channel name and that the Settings intent contains only this channel's ID.
+
+### Verification
+
+- Unit tests, Debug/Release APK builds, Android-test APK build and `lintDebug` passed.
+- The local device suite passed five executed locked-hint tests, including dedicated channel naming and Settings intent targeting. Two API-26/keyguard-specific tests were conditionally skipped on Android 35.
+- Delivery APK: `app/build/outputs/apk/debug/OrderEcho-first-call-D7.apk`; SHA256 `59AA3C31D1C4B6D844433F178AD634E4919D9B9E4FC60A7B7515557ECF85701C`.
+
+### Next
+
+Cover-install `OrderEcho-first-call-D7.apk`, open Settings and tap `打开锁屏提示通知设置`. Confirm the system title is `首次来电识别（锁屏提示）`, then look for high-priority/banner/lock-screen settings while keeping sound and vibration off. Test a new number locked and send the resulting diagnostic page.
 ## 2026-09-21 — D6 full-screen route diagnostics
 
 ### Evidence and change

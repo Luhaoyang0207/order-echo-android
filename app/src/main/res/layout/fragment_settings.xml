@@ -52,6 +52,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/call_monitor_explanation" />
+        <Button
+            android:id="@+id/locked_hint_notification_settings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/locked_hint_notification_settings" />
         <LinearLayout
             android:id="@+id/first_call_diagnostics_controls"
             android:layout_width="match_parent"

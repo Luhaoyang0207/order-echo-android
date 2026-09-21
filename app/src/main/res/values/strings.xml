@@ -52,6 +52,8 @@
     <string name="more">更多</string>
     <string name="first_call_label">第一次来电</string>
     <string name="first_call_title">首次来电识别</string>
+    <string name="first_call_locked_hint_channel_title">首次来电识别（锁屏提示）</string>
+    <string name="locked_hint_notification_settings">打开锁屏提示通知设置</string>
     <string name="first_call_notification">正在处理来电提示，完成后自动关闭</string>
     <string name="first_call_permissions_explanation">首次来电识别需要电话、通话记录和悬浮窗权限。</string>
     <string name="first_call_permission_status">电话：%1$s\n通话记录：%2$s\n悬浮窗：%3$s</string>
@@ -66,7 +68,7 @@
     <string name="first_call_test_label">悬浮窗测试</string>
     <string name="first_call_test_failed">测试悬浮窗添加失败，请查看来电诊断。</string>
     <string name="first_call_diagnostics_title">查看来电诊断</string>
-    <string name="first_call_diagnostics_description">版本 D6 · 本页自动刷新，仅保留本机最近 32 条处理步骤，不记录号码。\n正式使用请在设置中开启来电识别，确认通知栏有常驻通知，再测试来电。60 秒监听测试仅供排障。</string>
+    <string name="first_call_diagnostics_description">版本 D7 · 本页自动刷新，仅保留本机最近 32 条处理步骤，不记录号码。\n正式使用请在设置中开启来电识别，确认通知栏有常驻通知，再测试来电。60 秒监听测试仅供排障。</string>
     <string name="first_call_diagnostics_clear">清空诊断记录</string>
     <string name="first_call_diagnostics_retry">已清空诊断。请测试一次来电，结束后返回查看来电诊断。</string>
     <string name="first_call_probe_title">开始 60 秒监听测试</string>
