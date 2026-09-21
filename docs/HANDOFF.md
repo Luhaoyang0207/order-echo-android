@@ -2,14 +2,14 @@
 
 ## Current goal
 
-D10 adds a user-authorized accessibility-overlay path for locked first calls. The design specification is ready for user review; no D10 application code has been added yet.
+D10 adds a user-authorized accessibility-overlay path for locked first calls. The design is approved and the implementation plan is ready for review; no D10 application code has been added yet.
 
 ## 2026-09-22 — D10 accessibility-overlay design
 
 - Huawei D9 physical testing and ADB prove the app posts its high-priority silent notification, but EMUI suppresses it behind the native locked incoming-call UI.
 - The approved design uses an explicitly user-enabled accessibility service to own a small, noninteractive `TYPE_ACCESSIBILITY_OVERLAY`; it does not observe screen content, handle events, or control calls.
 - The full design, privacy boundary, fallback behavior and BAC-AL00 acceptance steps are in `docs/superpowers/specs/2026-09-22-accessibility-lock-screen-overlay-design.md`.
-- Await the user's review of that design before writing the implementation plan or application code.
+- The design is approved. The detailed execution plan is `docs/superpowers/plans/2026-09-22-d10-accessibility-lock-screen-overlay.md`; await its review and execution-method selection before writing application code.
 
 ## 2026-09-21 — D9 activity-free locked heads-up notification
 
