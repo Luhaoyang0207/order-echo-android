@@ -1,3 +1,8 @@
+## 2026-09-22 — Keep a displayed first-call hint for the active call
+
+The restaurant requires `第一次来电` to remain visible throughout ringing, rather than disappearing after an arbitrary 12-second display timer. Once the first-call check has completed and one presentation route has shown the fixed label, only answer, rejection, hang-up, another terminal call state, permission/feature disable, service destruction, or an explicit replacement may remove it.
+
+Retain the 15-second safety limit only for a Call Log query that has not yet produced a display. On a successful display, cancel that lookup deadline while preserving the existing 500 ms read-only telephone-state check. This keeps long ringing calls visible without letting a stuck provider query retain a foreground service indefinitely.
 ## 2026-09-22 — Use a user-enabled accessibility overlay for locked first calls (D10 design)
 
 Huawei BAC-AL00 evidence now rules out the three ordinary app presentation routes:

@@ -72,6 +72,20 @@ class FirstCallSettingsTest {
         return false
     }
 
+    @Test fun diagnosticOverlayStillTimesOutIndependentlyOfCallHints() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        val device = UiDevice.getInstance(instrumentation)
+        assertTrue("Enable overlay permission before running this test", Settings.canDrawOverlays(context))
+        ActivityScenario.launch(MainActivity::class.java).use {
+            onView(withId(R.id.settings_tab)).perform(click())
+            onView(withId(R.id.test_call_overlay)).perform(scrollTo(), click())
+            assertTrue(waitForOverlay(device, true))
+            SystemClock.sleep(13_000)
+            assertTrue("The debug overlay should still close after its own 12-second test timeout",
+                waitForOverlay(device, false))
+        }
+    }
     @Test fun externalStopUpdatesSettingsWithoutReopeningScreen() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext

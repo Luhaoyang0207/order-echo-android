@@ -3,8 +3,6 @@ package com.luhaoyang.orderecho.calls
 import android.provider.Settings
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import org.junit.Assert.*
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -18,7 +16,7 @@ class FirstCallOverlayManagerTest {
     @Test fun repeatedShowAndHideUseOneWindowWithoutLeakingOrCrashing() {
         assumeTrue("Grant overlay permission on the test device", Settings.canDrawOverlays(context))
         instrumentation.runOnMainSync {
-            val overlay = FirstCallOverlayManager(context) {}
+            val overlay = FirstCallOverlayManager(context)
             try {
                 assertTrue(overlay.show())
                 assertTrue(overlay.show())
@@ -33,17 +31,16 @@ class FirstCallOverlayManagerTest {
         }
     }
 
-    @Test fun timeoutRemovesWindowAndNotifiesItsOwner() {
+    @Test fun staysVisibleUntilItsOwnerHidesIt() {
         assumeTrue("Grant overlay permission on the test device", Settings.canDrawOverlays(context))
-        val expired = CountDownLatch(1)
         lateinit var overlay: FirstCallOverlayManager
         instrumentation.runOnMainSync {
-            overlay = FirstCallOverlayManager(context) { expired.countDown() }
+            overlay = FirstCallOverlayManager(context)
             assertTrue(overlay.show())
         }
         try {
-            assertTrue(expired.await(15, TimeUnit.SECONDS))
-            instrumentation.runOnMainSync { assertFalse(overlay.isShowing()) }
+            Thread.sleep(13_000)
+            instrumentation.runOnMainSync { assertTrue(overlay.isShowing()) }
         } finally {
             instrumentation.runOnMainSync { overlay.hide() }
         }

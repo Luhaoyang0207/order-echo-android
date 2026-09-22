@@ -14,6 +14,8 @@ import com.luhaoyang.orderecho.calls.FirstCallOverlayManager
 import com.luhaoyang.orderecho.calls.FirstCallLockedHint
 import com.luhaoyang.orderecho.calls.FirstCallPermissions
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.Button
 import android.widget.RadioGroup
@@ -34,6 +36,11 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     }
     private var stopObservingMonitoring: (() -> Unit)? = null
     private var testOverlay: FirstCallOverlayManager? = null
+    private val testOverlayHandler = Handler(Looper.getMainLooper())
+    private val testOverlayTimeout = Runnable {
+        testOverlay?.hide()
+        testOverlay = null
+    }
     private var diagnosticsDialog: AlertDialog? = null
     private var stopObservingDiagnostics: (() -> Unit)? = null
     private lateinit var settings: AppSettings
@@ -80,11 +87,13 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         view.findViewById<View>(R.id.first_call_diagnostics_controls).visibility =
             if (BuildConfig.DEBUG) View.VISIBLE else View.GONE
         view.findViewById<Button>(R.id.test_call_overlay).setOnClickListener {
+            testOverlayHandler.removeCallbacks(testOverlayTimeout)
             testOverlay?.hide()
-            val overlay = FirstCallOverlayManager(requireContext().applicationContext) {}
+            val overlay = FirstCallOverlayManager(requireContext().applicationContext)
             testOverlay = overlay
             val added = overlay.show(R.string.first_call_test_label)
             CallDiagnostics.record(requireContext(), if (added) CallDiagnosticEvent.TEST_ADDED else CallDiagnosticEvent.TEST_FAILED)
+            if (added) testOverlayHandler.postDelayed(testOverlayTimeout, 12_000L)
             if (!added) Toast.makeText(requireContext(), R.string.first_call_test_failed, Toast.LENGTH_LONG).show()
         }
         view.findViewById<Button>(R.id.show_call_diagnostics).setOnClickListener { showCallDiagnostics() }
@@ -107,6 +116,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     }
 
     override fun onStop() {
+        testOverlayHandler.removeCallbacks(testOverlayTimeout)
         testOverlay?.hide()
         testOverlay = null
         super.onStop()

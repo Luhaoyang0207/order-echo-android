@@ -78,8 +78,7 @@ Conditional `stopSelfResult(startId)` preserves newer queued service starts.
 
 `FirstCallOverlayManager` owns one application-context TYPE_APPLICATION_OVERLAY
 window with no input focus or touch handling. Receiver state changes, 500ms state
-checks, a 12-second overlay timeout, a 15-second total service deadline and service
-destruction all remove it. Cancellation never changes Huawei call state.
+checks, and service destruction remove it. A 15-second safety deadline applies only while the Call Log lookup is pending; it is cancelled once a hint is displayed. Cancellation never changes Huawei call state.
 
 SettingsFragment provides runtime permission requests and package-scoped overlay
 settings/recovery. MainActivity routes only its own storage permission callback;

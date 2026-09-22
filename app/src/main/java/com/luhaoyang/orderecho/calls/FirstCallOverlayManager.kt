@@ -5,8 +5,6 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.os.Handler
-import android.os.Looper
 import android.provider.Settings
 import android.view.Gravity
 import android.view.WindowManager
@@ -14,12 +12,10 @@ import android.widget.TextView
 import com.luhaoyang.orderecho.R
 
 /** Main-thread owned window, with application context so it cannot retain an Activity. */
-class FirstCallOverlayManager(context: Context, private val onTimeout: () -> Unit) {
+class FirstCallOverlayManager(context: Context) {
     private val appContext = context.applicationContext
     private val windowManager = appContext.getSystemService(WindowManager::class.java)
-    private val handler = Handler(Looper.getMainLooper())
     private var view: TextView? = null
-    private val timeout = Runnable { hide(); onTimeout() }
 
     fun isShowing(): Boolean = view != null
 
@@ -57,7 +53,6 @@ class FirstCallOverlayManager(context: Context, private val onTimeout: () -> Uni
         return try {
             windowManager.addView(label, params)
             view = label
-            handler.postDelayed(timeout, 12_000L)
             callDebug("Overlay shown")
             true
         } catch (_: RuntimeException) {
@@ -68,7 +63,6 @@ class FirstCallOverlayManager(context: Context, private val onTimeout: () -> Uni
     }
 
     fun hide() {
-        handler.removeCallbacks(timeout)
         val current = view ?: return
         view = null
         runCatching { windowManager.removeViewImmediate(current) }

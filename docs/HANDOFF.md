@@ -1,8 +1,18 @@
 # OrderEcho — Handoff
 
+## 2026-09-22 — D11: first-call hint lasts for the ringing call
+
+- User accepted D10 on the Huawei phone and requested that the `第一次来电` hint remain displayed until the call is answered, rejected, hung up, or otherwise ends.
+- Removed the 12-second display timers from the ordinary overlay and locked presentation routes. The service's 500 ms call-state check now owns normal dismissal for every route.
+- The 15-second safety deadline now applies only while the read-only Call Log lookup is pending. It is cancelled after any hint has been shown, so it cannot remove an active hint during a long ringing call.
+- The Android regression test now waits beyond 12 seconds and requires the ordinary overlay to remain visible until its owner hides it. It compiles locally; runtime execution remains pending while ADB reports no connected device.
+
+### Next
+
+Build/install `dist/OrderEcho-first-call-D11.apk`, call from a fresh-number test phone, let it ring longer than 12 seconds, then verify that the hint remains until answering or ending the call. Check both unlocked and, with the enabled accessibility service, locked presentation.
 ## Current goal
 
-D10 adds a user-authorized accessibility-overlay path for locked first calls. Implementation is built, but Android instrumentation and BAC-AL00 visual acceptance remain pending because ADB currently reports no connected device.
+D11 keeps a displayed first-call hint visible for the complete ringing call, on both the ordinary and enabled accessibility-overlay routes. The APK is built; the 13-second Android regression test and physical confirmation remain pending because ADB currently reports no connected device.
 
 ## 2026-09-22 — D10 display-only accessibility lock-screen overlay
 
@@ -137,6 +147,16 @@ Cover-install `OrderEcho-first-call-D5.apk`, keep monitoring and notifications e
 
 Cover-install D4, retain existing permissions and the enabled monitoring switch, then test a fresh number while the phone is locked. Confirm App notifications are allowed if the system hint is absent; send the D4 diagnostic report if needed.
 
+## 2026-09-22 — D11: first-call hint lasts for the ringing call
+
+- User accepted D10 on the Huawei phone and requested that the `第一次来电` hint remain displayed until the call is answered, rejected, hung up, or otherwise ends.
+- Removed the 12-second display timers from the ordinary overlay and locked presentation routes. The service's 500 ms call-state check now owns normal dismissal for every route.
+- The 15-second safety deadline now applies only while the read-only Call Log lookup is pending. It is cancelled after any hint has been shown, so it cannot remove an active hint during a long ringing call.
+- The Android regression test now waits beyond 12 seconds and requires the ordinary overlay to remain visible until its owner hides it. It compiles locally; runtime execution remains pending while ADB reports no connected device.
+
+### Next
+
+Build/install `dist/OrderEcho-first-call-D11.apk`, call from a fresh-number test phone, let it ring longer than 12 seconds, then verify that the hint remains until answering or ending the call. Check both unlocked and, with the enabled accessibility service, locked presentation.
 ## Current goal
 
 D3 runtime-reception fix is ready for Huawei installation and physical acceptance. D2 photos prove runtime PHONE_STATE and default/SIM1 callbacks deliver ringing with a number while the original manifest receiver remains silent. Production now offers opt-in foreground runtime monitoring; emulator end-to-end verification passed with the original receiver disabled. Actual Huawei first-caller overlay visibility/reliability remains to be confirmed. Recording filesystem follow-up stays separate.

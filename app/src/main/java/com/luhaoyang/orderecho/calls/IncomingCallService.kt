@@ -27,11 +27,8 @@ class IncomingCallService : Service() {
     private var query: Future<*>? = null
     private var destroyed = false
     private var latestStartId = 0
-    private val deadline = Runnable { record(CallDiagnosticEvent.DEADLINE); finishCall() }
-    private val lockedHintTimeout = Runnable {
-        record(CallDiagnosticEvent.LOCKED_HINT_TIMEOUT)
-        finishCall()
-    }
+    // Stops a stuck Call Log lookup; it is removed once the hint is on screen.
+    private val lookupDeadline = Runnable { record(CallDiagnosticEvent.DEADLINE); finishCall() }
     private val checkState = object : Runnable {
         override fun run() {
             if (request == null) return
@@ -47,10 +44,7 @@ class IncomingCallService : Service() {
         super.onCreate()
         IncomingCalls.service = this
         record(CallDiagnosticEvent.SERVICE_CREATED)
-        overlay = FirstCallOverlayManager(applicationContext) {
-            record(CallDiagnosticEvent.OVERLAY_TIMEOUT)
-            finishCall()
-        }
+        overlay = FirstCallOverlayManager(applicationContext)
         showServiceNotification()
     }
 
@@ -74,7 +68,7 @@ class IncomingCallService : Service() {
         clearWork()
         request = incoming
         val signal = CancellationSignal().also { cancellation = it }
-        handler.postDelayed(deadline, 15_000L)
+        handler.postDelayed(lookupDeadline, 15_000L)
         handler.post(checkState)
         record(CallDiagnosticEvent.QUERY_STARTED)
         callDebug("Checking previous calls")
@@ -102,9 +96,7 @@ class IncomingCallService : Service() {
                             FirstCallAccessibilityOverlay.isAvailable()
                         )) {
                             FirstCallPresentation.ACCESSIBILITY_OVERLAY -> {
-                                if (showAccessibilityOverlay()) {
-                                    handler.postDelayed(lockedHintTimeout, LOCKED_HINT_TIMEOUT_MS)
-                                } else if (!showLockedHint(fallback = true)) {
+                                if (!showAccessibilityOverlay() && !showLockedHint(fallback = true)) {
                                     finishCall()
                                 }
                             }
@@ -166,10 +158,12 @@ class IncomingCallService : Service() {
 
     private fun showOverlay(): Boolean = overlay.show().also {
         record(if (it) CallDiagnosticEvent.OVERLAY_ADDED else CallDiagnosticEvent.OVERLAY_FAILED)
+        if (it) handler.removeCallbacks(lookupDeadline)
     }
 
     private fun showAccessibilityOverlay(): Boolean = FirstCallAccessibilityOverlay.show().also {
         record(if (it) CallDiagnosticEvent.ACCESSIBILITY_OVERLAY_ADDED else CallDiagnosticEvent.ACCESSIBILITY_OVERLAY_FAILED)
+        if (it) handler.removeCallbacks(lookupDeadline)
     }
 
     private fun showLockedHint(fallback: Boolean): Boolean {
@@ -177,7 +171,7 @@ class IncomingCallService : Service() {
         return FirstCallLockedHint.show(this).also { shown ->
             if (shown) {
                 record(CallDiagnosticEvent.LOCKED_HINT_POSTED)
-                handler.postDelayed(lockedHintTimeout, LOCKED_HINT_TIMEOUT_MS)
+                handler.removeCallbacks(lookupDeadline)
             }
         }
     }
@@ -217,7 +211,6 @@ class IncomingCallService : Service() {
     companion object {
         private const val CHANNEL = "first-call-check"
         private const val NOTIFICATION_ID = 101
-        private const val LOCKED_HINT_TIMEOUT_MS = 12_000L
         private const val NUMBER = "number"
         private const val TOKEN = "token"
         private const val BEFORE = "before"

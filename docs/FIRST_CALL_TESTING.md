@@ -192,5 +192,5 @@ CallHistoryCheckerTest 使用合成 MatrixCursor，从不更改系统 Call Log�
 2. 只手动开启 OrderEcho 的「锁屏顶部提示」服务；它只显示固定提示，不读取屏幕内容，不控制电话。
 3. 返回 App 后应显示「锁屏顶部提示：已开启」。清空诊断，删除专用测试号码的全部系统历史来电，锁屏后从该号码拨入。
 4. 响铃时顶部只显示小型「第一次来电」。没有号码、额外铃声或震动；华为原生来电画面及接听、挂断、短信、提醒必须保持可见和直接可用，不得出现「点击返回来电」。
-5. 接听、挂断或 12 秒后标签必须消失。关闭该服务后重复测试，应用不得启动 Activity，最多只使用 D9 静音通知降级路径。
+5. 标签必须持续显示到接听、挂断或来电结束后才消失。关闭该服务后重复测试，应用不得启动 Activity，最多只使用 D9 静音通知降级路径。
 6. ADB 验收只读取窗口与 Activity 状态：响铃时 `dumpsys window windows` 应同时保留 Huawei `InCallActivity` 和 OrderEcho 无障碍窗口；`dumpsys activity activities` 不得显示 OrderEcho Activity。不要导出通话记录、录音或号码。
