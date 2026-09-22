@@ -97,14 +97,19 @@ class IncomingCallService : Service() {
                     if (!show || !permissionsReady() || !isStillRinging()) {
                         finishCall()
                     } else {
-                        when (FirstCallPresentation.forKeyguard(FirstCallLockedHint.isLocked(this), false)) {
-                            FirstCallPresentation.HEADS_UP_NOTIFICATION, FirstCallPresentation.ACCESSIBILITY_OVERLAY -> {
-                                if (FirstCallLockedHint.show(this)) {
-                                    record(CallDiagnosticEvent.LOCKED_HINT_POSTED)
+                        when (FirstCallPresentation.forKeyguard(
+                            FirstCallLockedHint.isLocked(this),
+                            FirstCallAccessibilityOverlay.isAvailable()
+                        )) {
+                            FirstCallPresentation.ACCESSIBILITY_OVERLAY -> {
+                                if (showAccessibilityOverlay()) {
                                     handler.postDelayed(lockedHintTimeout, LOCKED_HINT_TIMEOUT_MS)
-                                } else {
+                                } else if (!showLockedHint(fallback = true)) {
                                     finishCall()
                                 }
+                            }
+                            FirstCallPresentation.HEADS_UP_NOTIFICATION -> {
+                                if (!showLockedHint(fallback = true)) finishCall()
                             }
                             FirstCallPresentation.OVERLAY -> if (!showOverlay()) finishCall()
                         }
@@ -133,6 +138,10 @@ class IncomingCallService : Service() {
         query = null
         if (overlay.isShowing()) record(CallDiagnosticEvent.OVERLAY_REMOVED)
         overlay.hide()
+        if (FirstCallAccessibilityOverlay.isShowing()) {
+            record(CallDiagnosticEvent.ACCESSIBILITY_OVERLAY_REMOVED)
+        }
+        FirstCallAccessibilityOverlay.hide()
     }
 
     @Suppress("DEPRECATION")
@@ -157,6 +166,20 @@ class IncomingCallService : Service() {
 
     private fun showOverlay(): Boolean = overlay.show().also {
         record(if (it) CallDiagnosticEvent.OVERLAY_ADDED else CallDiagnosticEvent.OVERLAY_FAILED)
+    }
+
+    private fun showAccessibilityOverlay(): Boolean = FirstCallAccessibilityOverlay.show().also {
+        record(if (it) CallDiagnosticEvent.ACCESSIBILITY_OVERLAY_ADDED else CallDiagnosticEvent.ACCESSIBILITY_OVERLAY_FAILED)
+    }
+
+    private fun showLockedHint(fallback: Boolean): Boolean {
+        if (fallback) record(CallDiagnosticEvent.LOCKED_HINT_FALLBACK)
+        return FirstCallLockedHint.show(this).also { shown ->
+            if (shown) {
+                record(CallDiagnosticEvent.LOCKED_HINT_POSTED)
+                handler.postDelayed(lockedHintTimeout, LOCKED_HINT_TIMEOUT_MS)
+            }
+        }
     }
 
     private fun showServiceNotification() {
