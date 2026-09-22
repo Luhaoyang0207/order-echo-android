@@ -9,6 +9,7 @@ import com.luhaoyang.orderecho.BuildConfig
 import com.luhaoyang.orderecho.calls.CallMonitoring
 import com.luhaoyang.orderecho.calls.CallDiagnostics
 import com.luhaoyang.orderecho.calls.CallDiagnosticEvent
+import com.luhaoyang.orderecho.calls.FirstCallAccessibilityOverlay
 import com.luhaoyang.orderecho.calls.FirstCallOverlayManager
 import com.luhaoyang.orderecho.calls.FirstCallLockedHint
 import com.luhaoyang.orderecho.calls.FirstCallPermissions
@@ -64,6 +65,9 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         }
         view.findViewById<Button>(R.id.locked_hint_notification_settings).setOnClickListener {
             openLockedHintNotificationSettings()
+        }
+        view.findViewById<Button>(R.id.open_accessibility_settings).setOnClickListener {
+            openAccessibilitySettings()
         }
         view.findViewById<Button>(R.id.toggle_call_monitor).setOnClickListener {
             if (CallMonitoring.isEnabled(requireContext())) {
@@ -172,6 +176,15 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             state(FirstCallPermissions.granted(context, Manifest.permission.READ_CALL_LOG)),
             state(Settings.canDrawOverlays(context))
         )
+        val accessibilityStatus = if (FirstCallAccessibilityOverlay.isAvailable()) {
+            R.string.first_call_accessibility_enabled
+        } else {
+            R.string.first_call_accessibility_disabled
+        }
+        root.findViewById<TextView>(R.id.first_call_accessibility_status).text = getString(
+            R.string.first_call_accessibility_status,
+            getString(accessibilityStatus)
+        )
         root.findViewById<Button>(R.id.grant_call_permissions).isEnabled = !FirstCallPermissions.hasRuntime(context)
         root.findViewById<Button>(R.id.grant_overlay_permission).isEnabled = !Settings.canDrawOverlays(context)
         root.findViewById<Button>(R.id.first_call_app_settings).visibility =
@@ -186,6 +199,13 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             startActivity(FirstCallLockedHint.notificationSettingsIntent(requireContext()))
         } catch (_: RuntimeException) {
             openPermissionSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        }
+    }
+    private fun openAccessibilitySettings() {
+        try {
+            startActivity(accessibilitySettingsIntent())
+        } catch (_: RuntimeException) {
+            Toast.makeText(requireContext(), R.string.first_call_settings_unavailable, Toast.LENGTH_LONG).show()
         }
     }
     private fun openPermissionSettings(action: String) {
@@ -266,6 +286,10 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         bytes < 1024L -> "$bytes B"
         bytes < 1024L * 1024L -> String.format(Locale.US, "%.1f KB", bytes / 1024.0)
         else -> String.format(Locale.US, "%.1f MB", bytes / (1024.0 * 1024.0))
+    }
+
+    companion object {
+        internal fun accessibilitySettingsIntent(): Intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
     }
 }
 

@@ -107,4 +107,14 @@ class FirstCallSettingsTest {
             onView(withId(R.id.first_call_permission_status)).check(matches(isDisplayed()))
         }
     }
+    @Test fun settingsExposeManualAccessibilitySetupIntent() {
+        val intent = SettingsFragment.accessibilitySettingsIntent()
+        assertTrue(intent.action == Settings.ACTION_ACCESSIBILITY_SETTINGS)
+
+        ActivityScenario.launch(MainActivity::class.java).use {
+            onView(withId(R.id.settings_tab)).perform(click())
+            onView(withId(R.id.first_call_accessibility_status)).perform(scrollTo()).check(matches(isDisplayed()))
+            onView(withId(R.id.open_accessibility_settings)).perform(scrollTo()).check(matches(isDisplayed()))
+        }
+    }
 }
