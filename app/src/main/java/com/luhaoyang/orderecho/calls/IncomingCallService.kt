@@ -97,8 +97,8 @@ class IncomingCallService : Service() {
                     if (!show || !permissionsReady() || !isStillRinging()) {
                         finishCall()
                     } else {
-                        when (FirstCallPresentation.forKeyguard(FirstCallLockedHint.isLocked(this))) {
-                            FirstCallPresentation.HEADS_UP_NOTIFICATION -> {
+                        when (FirstCallPresentation.forKeyguard(FirstCallLockedHint.isLocked(this), false)) {
+                            FirstCallPresentation.HEADS_UP_NOTIFICATION, FirstCallPresentation.ACCESSIBILITY_OVERLAY -> {
                                 if (FirstCallLockedHint.show(this)) {
                                     record(CallDiagnosticEvent.LOCKED_HINT_POSTED)
                                     handler.postDelayed(lockedHintTimeout, LOCKED_HINT_TIMEOUT_MS)
