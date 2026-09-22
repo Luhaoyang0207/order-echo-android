@@ -53,6 +53,12 @@
     <string name="first_call_label">第一次来电</string>
     <string name="first_call_title">首次来电识别</string>
     <string name="first_call_locked_hint_channel_title">首次来电识别（锁屏提示）</string>
+    <string name="first_call_accessibility_status">锁屏顶部提示：%1$s</string>
+    <string name="first_call_accessibility_enabled">已开启</string>
+    <string name="first_call_accessibility_disabled">未开启</string>
+    <string name="first_call_accessibility_explanation">锁屏提示需要在系统无障碍设置中手动开启；服务只显示固定提示，不读取屏幕内容或控制电话。</string>
+    <string name="open_accessibility_settings">打开无障碍设置</string>
+    <string name="first_call_accessibility_service_description">只在锁屏首次来电时显示固定顶部提示，不读取屏幕内容、不控制电话。</string>
     <string name="locked_hint_notification_settings">打开锁屏提示通知设置</string>
     <string name="first_call_notification">正在处理来电提示，完成后自动关闭</string>
     <string name="first_call_permissions_explanation">首次来电识别需要电话、通话记录和悬浮窗权限。</string>
