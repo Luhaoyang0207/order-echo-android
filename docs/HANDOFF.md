@@ -2,8 +2,19 @@
 
 ## Current goal
 
-D10 adds a user-authorized accessibility-overlay path for locked first calls. The design is approved and the implementation plan is ready for review; no D10 application code has been added yet.
+D10 adds a user-authorized accessibility-overlay path for locked first calls. Implementation is built, but Android instrumentation and BAC-AL00 visual acceptance remain pending because ADB currently reports no connected device.
 
+## 2026-09-22 — D10 display-only accessibility lock-screen overlay
+
+- Adds non-exported `FirstCallAccessibilityService`, protected by `BIND_ACCESSIBILITY_SERVICE`. It declares `canRetrieveWindowContent=false`, leaves `onAccessibilityEvent` empty, and neither reads screen content nor requests gestures, key filtering or screenshots.
+- When the manually enabled service is connected, a locked FIRST result uses one compact fixed-text `TYPE_ACCESSIBILITY_OVERLAY` with no focus and no touch. It contains only `第一次来电`; no caller data, sound, vibration, Activity or full-screen intent is used.
+- Unlocked calls retain `TYPE_APPLICATION_OVERLAY`. An unavailable service or failed accessibility window uses the existing D9 silent notification fallback. Answer, hang-up, service destruction and both deadlines remove all display paths safely.
+- Settings reports the live service connection and opens system Accessibility Settings; the app cannot enable the service itself.
+- Unit routing tests, Debug APK, Android-test APK and lint pass. Newly added Android instrumentation tests and Huawei visual/answer/reject acceptance are pending because `adb devices` returns no device.
+
+### Next
+
+Reconnect and unlock BAC-AL00 with USB debugging authorized. Install `dist/OrderEcho-first-call-D10.apk` (SHA-256 `2C82ABC0CCF2DC6D533FD0C3D23ED7196E4FAAD87A8EC8D42DDEB2F305C94F43`), manually enable OrderEcho's lock-screen display service, then run the D10 acceptance steps in `docs/FIRST_CALL_TESTING.md`.
 ## 2026-09-22 — D10 accessibility-overlay design
 
 - Huawei D9 physical testing and ADB prove the app posts its high-priority silent notification, but EMUI suppresses it behind the native locked incoming-call UI.

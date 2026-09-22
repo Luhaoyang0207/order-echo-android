@@ -5,10 +5,10 @@ an Activity hides the native InCall UI, an application overlay stays below it, a
 high-importance silent notification is posted but suppressed on that screen. The user
 approved an accessibility-based route after reviewing this evidence.
 
-The planned service is deliberately display-only. It will not retrieve window content,
+The implemented service is deliberately display-only. It will not retrieve window content,
 listen to or persist accessibility events, perform gestures, filter keys, take screenshots,
 show caller information, or control calls. The user must manually enable it in Android
-Accessibility Settings. See the D10 design specification before implementation.
+Accessibility Settings. It owns a compact noninteractive TYPE_ACCESSIBILITY_OVERLAY when connected; unavailable or failed display falls back to D9 silent notification. Real Huawei visual validation remains required before display success is claimed.
 
 ## 2026-09-21 — Use an Activity-free heads-up notification on Huawei Keyguard (D9)
 
